@@ -606,19 +606,6 @@
   }
   .gt-warn-cell.gw-ok{ color:#276221; background:var(--sage-light); }
   .gt-warn-cell.gw-low{ color:#9C0006; background:var(--red-light); }
-  .gt-warn-cell .gw-streak{
-    display:block;
-    font-size:8.5px;
-    font-weight:800;
-    color:#9C0006;
-    line-height:1.1;
-    margin-top:1px;
-    white-space:nowrap;
-  }
-  .gt-warn-cell.gw-streak-alert{
-    outline:2px solid #9C0006;
-    outline-offset:-2px;
-  }
   .gt-warn-cell.gw-tight{ color:#5f4313; background:var(--gold-light); }
 
   .gt-footer-label{
@@ -1451,17 +1438,17 @@
     <button class="view-toggle active" id="viewGridBtn" onclick="setViewMode('grid')">📋 Grid</button>
     <button class="view-toggle" id="viewHoursBtn" onclick="setViewMode('hours')">⏱ Hrs</button>
     <button class="view-toggle" id="viewNotesBtn" onclick="setViewMode('notes')">📝 Notes</button>
+    <button class="view-toggle" id="viewCallOutBtn" onclick="setViewMode('callout')">📵 C/O</button>
     <button class="view-toggle more-btn" id="moreBtn" onclick="toggleMoreMenu()">⋯ More</button>
   </div>
   <div class="more-menu" id="moreMenu" style="display: none;">
     <button class="view-toggle more-menu-item print-btn" onclick="toggleMoreMenu(); printSchedule();">🖨 Print</button>
     <button class="view-toggle more-menu-item export-btn" onclick="toggleMoreMenu(); exportSchedule();">⬇ Export</button>
+    <button class="view-toggle more-menu-item export-btn" onclick="toggleMoreMenu(); importSchedule();">⬆ Import</button>
     <button class="view-toggle more-menu-item timeoff-btn" onclick="toggleMoreMenu(); openTimeOffForm();">📅 Time Off</button>
     <button class="view-toggle more-menu-item reapply-btn" onclick="toggleMoreMenu(); manualReapply();">↻ Reapply</button>
     <button class="view-toggle more-menu-item suggest-btn" onclick="toggleMoreMenu(); setViewMode('suggest');">💡 Suggest</button>
-    <button class="view-toggle more-menu-item suggest-btn" onclick="toggleMoreMenu(); autoBuildSchedule();">⚡ Auto-Build Week</button>
-    <button class="view-toggle more-menu-item suggest-btn" onclick="toggleMoreMenu(); undoAutoBuild();">↩ Undo Auto-Build</button>
-    <button class="view-toggle more-menu-item suggest-btn" onclick="toggleMoreMenu(); syncTargetsFromTraffic();">🎯 Sync Targets</button>
+    <button class="view-toggle more-menu-item" onclick="toggleMoreMenu(); resetToLatest();" style="color:#c0392b;">🔄 Reset to Latest</button>
     <button class="view-toggle more-menu-item staff-btn" onclick="toggleMoreMenu(); openStaffManager();">👥 Staff</button>
     <button class="view-toggle more-menu-item lock-btn" id="lockBtn" onclick="toggleLock()">⏱ Temp Override OFF</button>
     <button class="view-toggle more-menu-item availability-btn" onclick="toggleMoreMenu(); openAvailabilityScreen();">🗓 Availability</button>
@@ -2032,36 +2019,36 @@ const BASE_OPTIONS = ["Yes","No","OFF","R/O"];
 
 // staff[name] = { am:[7 vals], pm:[7 vals] }
 let staff = {
-  "Macy Lombardo":         { am:["No","No","10:00 AM Open","No","No","No","No"], pm:["4:15 PM Open","No","No","No","No","4:45 PM","No"] },
-  "Wendy":                 { am:["10:45 AM","11:00 AM","No","No","10:00 AM Open","Yes","11:00 AM"], pm:["No","No","No","No","No","No","No"] },
-  "Christina":             { am:["Yes","10:45 AM","11:00 AM","10:45 AM","No","No","11:15 AM Close"], pm:["No","No","No","No","No","No","No"] },
-  "Damon Neros":           { am:["No","No","No","No","No","No","No"], pm:["No","No","4:15 PM Close C","No","No","No","No"] },
-  "Monica Argueta":        { am:["No","No","No","R/O","No","No","No"], pm:["Yes","5:00 PM","3:45 PM","R/O","No","5:00 PM","No"] },
-  "Nayeli A. Perez":       { am:["No","No","No","11:00 AM","No","No","No"], pm:["No","No","4:15 PM Close B","No","No","No","No"] },
-  "Tori Lash":             { am:["No","No","R/O","No","No","No","No"], pm:["No","No","R/O","Yes","No","4:15 PM Open","No"] },
-  "Brooke Koomey":         { am:["No","No","No","Yes","No","No","No"], pm:["5:15 PM Close A","No","Yes","No","4:15 PM Open","5:30 PM Close C","5:15 PM Close A"] },
-  "Ximena Ramirez":        { am:["No","No","No","R/O","No","No","No"], pm:["No","5:00 PM","3:45 PM","R/O","5:15 PM","5:00 PM","5:15 PM Close C"] },
-  "Miranda Sanchez":       { am:["No","11:30 AM Close","Yes","11:00 AM","No","No","11:00 AM"], pm:["No","5:00 PM","3:45 PM","Yes","No","No","Yes"] },
-  "Lizelle Arevalo":       { am:["11:00 AM","10:00 AM Open","11:00 AM","10:00 AM Open","No","No","10:45 AM"], pm:["No","No","3:45 PM","3:45 PM","No","No","No"] },
-  "Lupita Padron":         { am:["No","Yes","11:30 AM Close","11:00 AM","No","No","No"], pm:["Yes","5:15 PM Close A","No","No","5:30 PM Close B","5:15 PM","No"] },
-  "Jazlynn Gomez":         { am:["Yes","No","Yes","No","No","10:45 AM","10:15 AM Open"], pm:["No","5:15 PM Close B","3:45 PM","3:45 PM","No","No","No"] },
-  "Landry Mills":          { am:["10:00 AM Open","Yes","Yes","No","10:00 AM Open","10:15 AM Open","No"], pm:["No","No","3:45 PM","3:45 PM","5:30 PM Close A","Yes","No"] },
-  "Jacob Muñoz":           { am:["R/O","R/O","R/O","R/O","R/O","R/O","No"], pm:["R/O","R/O","R/O","R/O","R/O","R/O","Yes"] },
-  "Emily Koomey":          { am:["No","No","No","11:00 AM","No","No","No"], pm:["5:15 PM Close B","No","3:45 PM","No","No","5:30 PM Close B","4:45 PM"] },
-  "Jayla Felix":           { am:["No","No","11:00 AM","11:00 AM","No","No","No"], pm:["No","5:00 PM","3:45 PM","No","No","No","No"] },
-  "Isabella Escamilla":    { am:["No","Yes","11:00 AM","11:15 AM","11:15 AM Close","No","No"], pm:["Yes","4:15 PM Open","No","3:45 PM","5:00 PM","Yes","No"] },
-  "Cynthia Moreno":        { am:["No","No","Yes","11:00 AM","No","No","No"], pm:["No","5:15 PM Close C","1-V","4:15 PM Close B","No","5:00 PM","No"] },
-  "Olivia Leonard":        { am:["No","No","10:45 AM","No","Yes","No","Yes"], pm:["4:45 PM","4:45 PM","3:45 PM","4:15 PM Close C","4:45 PM","No","No"] },
-  "Ella Ward":             { am:["No","No","No","11:30 AM Close","No","No","No"], pm:["5:15 PM Close C","No","Yes","No","No","5:30 PM Close A","4:15 PM Open"] },
-  "Morgan Mills":          { am:["11:30 AM Close","Yes","Yes","Yes","No","No","Yes"], pm:["No","5:00 PM","4:15 PM Close A","No","No","5:00 PM","No"] },
-  "Parker Morris":         { am:["Yes","Yes","Yes","Yes","11:00 AM","11:30 AM Close","Yes"], pm:["5:00 PM","Yes","Yes","3:45 PM","Yes","Yes","Yes"] },
-  "Peyton Morris":         { am:["Yes","11:00 AM","Yes","Yes","Yes","Yes","Yes"], pm:["5:00 PM","Yes","Yes","3:45 PM","5:00 PM","Yes","5:00 PM"] },
-  "Andrea Argueta":        { am:["No","No","No","Yes","No","No","No"], pm:["No","5:00 PM","3:45 PM","No","No","No","No"] },
-  "Payton Casey":          { am:["Yes","Yes","Yes","No","No","No","Yes"], pm:["Yes","5:00 PM","3:45 PM","4:15 PM Close A","No","No","5:15 PM Close B"] },
-  "Adam Hantouli":         { am:["R/O","R/O","R/O","Yes","No","No","No"], pm:["R/O","R/O","R/O","1-V","5:00 PM","Yes","Yes"] },
-  "Bianca Gomez":          { am:["Yes","Yes","11:00 AM","11:00 AM","No","11:15 AM","Yes"], pm:["Yes","No","3:45 PM","Yes","5:30 PM Close C","Yes","5:00 PM"] },
-  "Jaxon":                 { am:["Yes","Yes","11:15 AM","11:00 AM","No","No","No"], pm:["No","5:00 PM","3:45 PM","3:45 PM","No","No","5:00 PM"] },
-  "Melanie":               { am:["No","No","11:00 AM","11:00 AM","No","No","No"], pm:["5:00 PM","No","Yes","3:45 PM","No","No","Yes"] },
+  "Macy Lombardo":       { am:["No", "No", "10:00 AM Open", "No", "No", "No", "No"], pm:["4:15 PM Open", "No", "No", "No", "No", "4:15 PM Open", "No"] },
+  "Wendy":               { am:["10:45 AM", "11:00 AM", "No", "No", "10:00 AM Open", "9:45 AM", "11:15 AM Close"], pm:["No", "No", "No", "No", "No", "No", "No"] },
+  "Christina":           { am:["11:30 AM Close", "10:45 AM", "11:00 AM", "10:45 AM", "No", "No", "No"], pm:["No", "No", "No", "No", "No", "No", "No"] },
+  "Damon Neros":         { am:["No", "No", "No", "No", "No", "No", "No"], pm:["No", "No", "3:45 PM Close B", "No", "No", "No", "No"] },
+  "Monica Argueta":      { am:["No", "No", "No", "R/O", "No", "No", "No"], pm:["4:45 PM", "5:00 PM", "3:45 PM", "R/O", "No", "5:00 PM", "No"] },
+  "Nayeli A. Perez":     { am:["No", "No", "No", "10:00 AM Open", "No", "No", "No"], pm:["No", "No", "3:45 PM Close C", "No", "No", "No", "No"] },
+  "Tori Lash":           { am:["No", "No", "R/O", "No", "No", "No", "No"], pm:["No", "No", "R/O", "3:45 PM Close B", "No", "4:45 PM", "No"] },
+  "Brooke Koomey":       { am:["No", "No", "No", "11:00 AM", "No", "No", "No"], pm:["5:15 PM Close A", "No", "3:45 PM", "No", "4:15 PM Open", "5:30 PM Close C", "5:15 PM Close A"] },
+  "Ximena Ramirez":      { am:["No", "No", "No", "R/O", "No", "No", "No"], pm:["No", "5:00 PM", "3:45 PM", "R/O", "5:15 PM", "5:00 PM", "5:15 PM Close C"] },
+  "Miranda Sanchez":     { am:["No", "11:30 AM Close", "Yes", "11:00 AM", "No", "No", "10:45 AM"], pm:["No", "5:00 PM", "3:45 PM", "Yes", "No", "No", "Yes"] },
+  "Lizelle Arevalo":     { am:["11:00 AM", "10:00 AM Open", "11:00 AM", "10:00 AM Open", "No", "No", "10:45 AM"], pm:["No", "No", "3:45 PM", "3:45 PM", "No", "No", "No"] },
+  "Lupita Padron":       { am:["No", "Yes", "11:30 AM Close", "11:00 AM", "No", "No", "No"], pm:["Yes", "5:15 PM Close A", "No", "No", "5:30 PM Close B", "5:15 PM", "No"] },
+  "Jazlynn Gomez":       { am:["Yes", "No", "R/O", "No", "No", "10:45 AM", "10:15 AM Open"], pm:["No", "5:15 PM Close B", "R/O", "3:45 PM", "No", "No", "No"] },
+  "Landry Mills":        { am:["10:00 AM Open", "Yes", "Yes", "No", "10:00 AM Open", "10:15 AM Open", "No"], pm:["No", "No", "3:45 PM", "3:45 PM", "5:30 PM Close A", "Yes", "No"] },
+  "Jacob Muñoz":         { am:["R/O", "R/O", "R/O", "R/O", "R/O", "R/O", "No"], pm:["R/O", "R/O", "R/O", "R/O", "R/O", "R/O", "No"] },
+  "Emily Koomey":        { am:["No", "No", "No", "11:00 AM", "No", "No", "No"], pm:["5:15 PM Close B", "No", "3:45 PM", "No", "No", "5:30 PM Close B", "4:45 PM"] },
+  "Jayla Felix":         { am:["No", "No", "No", "11:00 AM", "No", "No", "No"], pm:["No", "5:00 PM", "3:45 PM", "No", "No", "No", "No"] },
+  "Isabella Escamilla":  { am:["No", "Yes", "11:00 AM", "11:15 AM", "11:15 AM Close", "No", "No"], pm:["Yes", "4:15 PM Open", "No", "3:45 PM", "5:00 PM", "Yes", "No"] },
+  "Cynthia Moreno":      { am:["No", "No", "Yes", "11:00 AM", "11:00 AM", "No", "No"], pm:["No", "5:15 PM Close C", "1-V", "3:45 PM", "No", "5:00 PM", "No"] },
+  "Olivia Leonard":      { am:["No", "No", "10:45 AM", "No", "Yes", "No", "Yes"], pm:["4:45 PM", "4:45 PM", "3:45 PM", "3:45 PM Close C", "4:45 PM", "No", "No"] },
+  "Ella Ward":           { am:["No", "No", "No", "11:30 AM Close", "No", "No", "No"], pm:["5:15 PM Close C", "No", "Yes", "No", "No", "5:30 PM Close A", "4:15 PM Open"] },
+  "Morgan Mills":        { am:["11:30 AM Close", "Yes", "Yes", "Yes", "No", "No", "Yes"], pm:["No", "5:00 PM", "3:45 PM Close A", "No", "No", "5:00 PM", "5:00 PM"] },
+  "Parker Morris":       { am:["Yes", "Yes", "11:00 AM", "Yes", "11:15 AM Close", "11:30 AM Close", "Yes"], pm:["5:00 PM", "Yes", "Yes", "3:45 PM", "Yes", "Yes", "Yes"] },
+  "Peyton Morris":       { am:["Yes", "11:00 AM", "Yes", "Yes", "Yes", "Yes", "Yes"], pm:["5:00 PM", "Yes", "Yes", "3:45 PM", "5:00 PM", "5:00 PM", "5:00 PM"] },
+  "Andrea Argueta":      { am:["No", "No", "No", "Yes", "No", "No", "No"], pm:["No", "5:00 PM", "3:45 PM", "No", "No", "No", "No"] },
+  "Payton Casey":        { am:["Yes", "Yes", "Yes", "No", "No", "No", "Yes"], pm:["Yes", "5:00 PM", "3:45 PM", "3:45 PM Close A", "No", "No", "5:15 PM Close B"] },
+  "Adam Hantouli":       { am:["R/O", "R/O", "R/O", "R/O", "No", "No", "No"], pm:["R/O", "R/O", "R/O", "R/O", "5:00 PM", "5:00 PM", "5:00 PM"] },
+  "Bianca Gomez":        { am:["Yes", "Yes", "11:00 AM", "11:00 AM", "No", "11:15 AM", "Yes"], pm:["Yes", "No", "3:45 PM", "Yes", "5:30 PM Close C", "Yes", "5:00 PM"] },
+  "Jaxon":               { am:["Yes", "11:00 AM", "11:15 AM", "11:00 AM", "No", "No", "No"], pm:["5:00 PM", "5:00 PM", "3:45 PM", "3:45 PM", "No", "No", "5:00 PM"] },
+  "Melanie":             { am:["No", "No", "11:00 AM", "11:00 AM", "No", "No", "No"], pm:["5:00 PM", "5:00 PM", "Yes", "3:45 PM", "No", "No", "5:00 PM"] },
 };
 
 // Snapshot of baseline availability, used to reset a week that has no saved data yet.
@@ -2082,7 +2069,7 @@ const DEFAULT_STAFF_SNAPSHOT = {
   "Lupita Padron": { am:["No","Yes","Yes","Yes","No","No","No"], pm:["Yes","Yes","No","No","Yes","Yes","No"] },
   "Jazlynn Gomez": { am:["Yes","No","Yes","No","No","Yes","No"], pm:["No","Yes","Yes","Yes","No","No","Yes"] },
   "Landry Mills": { am:["Yes","Yes","Yes","No","Yes","Yes","No"], pm:["No","No","Yes","Yes","Yes","Yes","No"] },
-  "Jacob Muñoz": { am:["Yes","No","Yes","Yes","No","No","No"], pm:["Yes","No","Yes","No","No","Yes","Yes"] },
+  "Jacob Muñoz": { am:["Yes","Yes","Yes","Yes","No","No","No"], pm:["Yes","No","Yes","No","No","No","No"] },
   "Emily Koomey": { am:["No","No","No","Yes","No","No","No"], pm:["Yes","No","Yes","No","No","Yes","Yes"] },
   "Jayla Felix": { am:["No","No","Yes","Yes","No","No","No"], pm:["No","Yes","Yes","No","No","No","No"] },
   "Isabella Escamilla": { am:["No","Yes","Yes","Yes","Yes","No","No"], pm:["Yes","Yes","No","Yes","Yes","Yes","No"] },
@@ -2117,7 +2104,7 @@ const BAKED_TEMP_OVERRIDES = [];
 // Unlike the single `staff` variable above (which holds just the CURRENTLY
 // active week), this object lets multiple weeks survive permanently in the
 // exported file, not just whichever week happened to be open at export time.
-const BAKED_ALL_WEEKS = {"2026-07-09":{"Macy Lombardo":{"am":["No","10:45 AM","10:45 AM","No","No","No","No"],"pm":["No","No","No","No","No","4:15 PM Open","No"]},"Wendy":{"am":["10:45 AM","10:45 AM","10:45 AM","No","R/O","R/O","11:00 AM"],"pm":["No","No","No","No","No","No","No"]},"Christina":{"am":["11:30","10:45","R/O","R/O","No","No","11:15"],"pm":["No","No","No","No","No","No","No"]},"Damon Neros":{"am":["No","No","No","No","No","No","No"],"pm":["No","No","3:45 PM","No","No","No","No"]},"Monica Argueta":{"am":["No","No","R/O","10:45","No","No","No"],"pm":["5:00 PM","R/O","R/O","R/O","No","No","No"]},"Nayeli A. Perez":{"am":["No","No","No","11:00","No","No","No"],"pm":["No","No","3:45 PM","R/O","No","No","No"]},"Tori Lash":{"am":["No","No","R/O","No","No","5:00 PM","No"],"pm":["No","No","No","R/O","No","No","No"]},"Brooke Koomey":{"am":["R/O","R/O","R/O","R/O","No","R/O","R/O"],"pm":["R/O","No","R/O","R/O","No","R/O","R/O"]},"Ximena Ramirez":{"am":["No","No","No","No","No","No","No"],"pm":["No","5:00 PM","3:45 PM","No","4:15 PM","5:00 PM","5:15 PM Close"]},"Miranda Sanchez":{"am":["No","No","10:00 AM Open","11:00","No","No","10:00 AM Open"],"pm":["No","5:00 PM","No","No","No","No","4:15 PM"]},"Lizelle Arevalo":{"am":["11:00","Yes","Yes","10:00 AM Open","No","No","10:45"],"pm":["No","No","3:45 PM","3:45 PM","No","No","No"]},"Lupita Padron":{"am":["No","11:30 AM Close","11:30 AM Close","No","No","10:00 AM Open","No"],"pm":["4:15 PM Open","5:15 PM Close B","No","No","5:30 PM Close B","No","No"]},"Jazlynn Gomez":{"am":["No","No","Yes","No","No","11:00","No"],"pm":["No","5:15 PM Close B","R/O","3:45 PM","No","No","5:00 PM"]},"Landry Mills":{"am":["10:00 AM Open","No","11:30 AM Close","Yes","10:00 AM Open","10:45","Yes"],"pm":["No","No","3:45 PM","3:45 PM","5:30 PM Close A","5:30 PM Close A","No"]},"Jacob Mu\u00f1oz":{"am":["10:45","No","11:00","11:00","No","No","No"],"pm":["5:15 PM Close C","No","3:45 PM","No","No","No","No"]},"Emily Koomey":{"am":["No","No","No","11:00","No","No","No"],"pm":["5:15 PM Close A","No","5:15 PM Close B","No","No","5:15 PM Close A","5:15 PM Close B"]},"Jayla Felix":{"am":["No","No","5:00 PM","11:00","No","No","No"],"pm":["No","5:00 PM","3:45 PM","R/O","No","No","No"]},"Isabella Escamilla":{"am":["No","11:00","11:00","11:15","11:15","No","No"],"pm":["Yes","4:15 PM Open","No","3:45 PM","5:00 PM","5:00 PM","No"]},"Cynthia Moreno":{"am":["No","No","No","11:00","No","No","No"],"pm":["No","5:00 PM","1-V","4:15 PM Close B","No","5:00 PM","No"]},"Olivia Leonard":{"am":["No","No","10:45","No","Yes","No","Yes"],"pm":["4:45 PM","4:45 PM","3:45 PM","4:15 PM","4:45 PM","No","R/O"]},"Ella Ward":{"am":["No","No","No","11:30 AM Close","No","No","No"],"pm":["5:15 PM Close B","R/O","5:15 PM Close A","R/O","No","5:15 PM Close B","4:15 PM Open"]},"Morgan Mills":{"am":["11:30 AM Close","Yes","Yes","R/O","No","No","Yes"],"pm":["No","5:00 PM","5:15 PM Close A","No","No","5:00 PM","No"]},"Parker Morris":{"am":["5:00 PM","Yes","Yes","11:00","Yes","Yes","Yes"],"pm":["No","No","No","Yes","5:00 PM","5:00 PM","5:00 PM"]},"Peyton Morris":{"am":["5:00 PM","Yes","Yes","11:00","Yes","Yes","Yes"],"pm":["No","No","No","Yes","5:00 PM","5:00 PM","5:00 PM"]},"Andrea Argueta":{"am":["No","No","No","11:00","No","No","No"],"pm":["No","R/O","3:15 PM","No","No","No","5:00 PM"]},"Payton Casey":{"am":["Yes","Yes","Yes","No","No","No","Yes"],"pm":["5:00 PM","5:00 PM","3:45 PM","4:15 PM Close A","No","No","5:00 PM"]},"Adam Hantouli":{"am":["No","11:00","11:00","Yes","No","No","No"],"pm":["No","5:00 PM","5:00 PM","1-V","5:00 PM","R/O","R/O"]},"Bianca Gomez":{"am":["No","No","Yes","11:00","No","11:15","Yes"],"pm":["No","R/O","3:45 PM","Yes","5:30 PM Close C","Yes","5:00 PM"]},"Jaxon":{"am":["No","No","11:15","11:00","No","No","No"],"pm":["No","5:15 PM Close C","3:45 PM","3:45 PM","No","No","5:00 PM"]},"Melanie":{"am":["No","Yes","11:00","11:00","11:00","11:30 AM Close","Yes"],"pm":["5:00 PM","No","Yes","3:45 PM","4:15 PM Open","Yes","4:45 PM"]}},"2026-07-16":{"Macy Lombardo":{"am":["No","No","10:00 AM Open","No","No","No","No"],"pm":["4:15 PM Open","No","No","No","No","4:45 PM","No"]},"Wendy":{"am":["10:45 AM","10:00 AM Open","No","No","10:00 AM Open","Togo Only","10:15 AM Open"],"pm":["No","No","No","No","No","No","No"]},"Christina":{"am":["11:00 AM","10:45 AM","11:00 AM","10:45 AM","No","No","11:15 AM Close"],"pm":["No","No","No","No","No","No","No"]},"Damon Neros":{"am":["No","No","No","No","No","No","No"],"pm":["No","No","4:15 PM Close C","No","No","No","No"]},"Monica Argueta":{"am":["No","No","No","R/O","No","No","No"],"pm":["5:00 PM","5:00 PM","3:45 PM","R/O","No","5:00 PM","No"]},"Nayeli A. Perez":{"am":["No","No","No","11:00 AM","No","No","No"],"pm":["No","No","4:15 PM Close B","No","No","No","No"]},"Tori Lash":{"am":["No","No","R/O","No","No","No","No"],"pm":["No","No","R/O","3:45 PM","No","4:15 PM Open","No"]},"Brooke Koomey":{"am":["No","No","No","11:00 AM","No","No","No"],"pm":["5:15 PM Close A","No","3:45 PM","No","4:15 PM Open","5:30 PM Close C","5:15 PM Close A"]},"Ximena Ramirez":{"am":["No","No","No","R/O","No","No","No"],"pm":["No","No","3:45 PM","R/O","5:15 PM","5:00 PM","5:15 PM Close C"]},"Miranda Sanchez":{"am":["No","No","Yes","11:00 AM","No","No","11:00 AM"],"pm":["No","5:00 PM","3:45 PM","Yes","No","No","Yes"]},"Lizelle Arevalo":{"am":["11:00 AM","10:00 AM Open","11:00 AM","10:00 AM Open","No","No","10:45 AM"],"pm":["No","No","No","3:45 PM","No","No","No"]},"Lupita Padron":{"am":["No","Yes","11:30 AM Close","11:00 AM","No","No","No"],"pm":["Yes","5:15 PM Close A","No","No","5:30 PM Close B","No","No"]},"Jazlynn Gomez":{"am":["Yes","No","Yes","No","No","10:45 AM Open","10:15 AM Open"],"pm":["No","5:15 PM Close B","3:45 PM","3:45 PM","No","No","No"]},"Landry Mills":{"am":["10:00 AM Open","11:00 AM","Yes","No","10:00 AM Open","10:15 AM Open","No"],"pm":["No","No","3:45 PM","3:45 PM","5:00 PM","Yes","No"]},"Jacob Mu\u00f1oz":{"am":["R/O","R/O","R/O","R/O","R/O","R/O","No"],"pm":["R/O","R/O","R/O","R/O","R/O","R/O","5:00 PM"]},"Emily Koomey":{"am":["No","No","No","11:00 AM","No","No","No"],"pm":["5:15 PM Close B","No","3:45 PM","No","No","5:30 PM Close B","4:45 PM"]},"Jayla Felix":{"am":["No","No","11:00 AM","11:00 AM","No","No","No"],"pm":["No","5:00 PM","No","No","No","No","No"]},"Isabella Escamilla":{"am":["No","Yes","11:00 AM","11:15 AM","11:15 AM Close","No","No"],"pm":["5:00 PM","4:15 PM Open","No","3:45 PM","5:00 PM","Yes","No"]},"Cynthia Moreno":{"am":["No","No","Yes","11:00 AM","No","No","No"],"pm":["No","5:15 PM Close C","1-V","No","No","5:00 PM","No"]},"Olivia Leonard":{"am":["No","No","10:45 AM","No","Yes","No","Yes"],"pm":["4:45 PM","4:45 PM","3:45 PM","4:15 PM Close C","4:45 PM","No","No"]},"Ella Ward":{"am":["No","No","No","11:30 AM Close","No","No","No"],"pm":["5:15 PM Close C","No","Yes","No","No","5:30 PM Close A","4:15 PM Open"]},"Morgan Mills":{"am":["11:30 AM Close","Yes","Yes","11:00 AM","No","No","Yes"],"pm":["No","5:00 PM","4:15 PM Close A","No","No","No","No"]},"Parker Morris":{"am":["Yes","Yes","Yes","Yes","11:00 AM","11:30 AM Close","Yes"],"pm":["5:00 PM","Yes","Yes","4:15 PM Close C","Yes","Yes","Yes"]},"Peyton Morris":{"am":["Yes","11:00 AM","11:00 AM","Yes","Yes","Yes","Yes"],"pm":["5:00 PM","Yes","Yes","3:45 PM","No","Yes","5:00 PM"]},"Andrea Argueta":{"am":["No","No","No","11:00 AM","No","No","No"],"pm":["No","5:00 PM","3:45 PM","No","No","No","No"]},"Payton Casey":{"am":["11:00 AM","Yes","Yes","No","No","No","Yes"],"pm":["Yes","5:00 PM","3:45 PM","4:15 PM Close A","No","No","5:15 PM Close B"]},"Adam Hantouli":{"am":["R/O","R/O","R/O","11:00 AM","No","No","No"],"pm":["R/O","R/O","R/O","1-V","5:30 PM Close C","Yes","Yes"]},"Bianca Gomez":{"am":["Yes","11:30 AM Close","11:00 AM","11:00 AM","No","11:15 AM","Yes"],"pm":["Yes","No","No","Yes","5:30 PM Close C","Yes","No"]},"Jaxon":{"am":["Yes","Yes","11:15 AM","11:00 AM","No","No","No"],"pm":["No","5:00 PM","3:45 PM","3:45 PM","No","No","5:00 PM"]},"Melanie":{"am":["No","No","11:00 AM","11:00 AM","No","No","No"],"pm":["5:00 PM","No","3:45 PM","3:45 PM","No","No","Yes"]}},"2026-07-23":{"Macy Lombardo":{"am":["No","No","Yes","No","No","No","No"],"pm":["Yes","No","Yes","No","No","Yes","No"]},"Wendy":{"am":["Yes","Yes","No","No","Yes","Yes","Yes"],"pm":["No","No","No","No","No","No","No"]},"Christina":{"am":["Yes","Yes","Yes","Yes","No","No","Yes"],"pm":["No","No","No","No","No","No","No"]},"Damon Neros":{"am":["No","No","No","No","No","No","No"],"pm":["No","No","Yes","No","No","No","No"]},"Monica Argueta":{"am":["No","Yes","Yes","Yes","No","No","No"],"pm":["Yes","Yes","Yes","No","No","Yes","No"]},"Nayeli A. Perez":{"am":["No","No","No","Yes","No","No","No"],"pm":["No","No","Yes","No","No","No","No"]},"Tori Lash":{"am":["No","No","Yes","No","No","No","No"],"pm":["No","No","Yes","Yes","No","Yes","No"]},"Brooke Koomey":{"am":["No","No","No","Yes","No","No","No"],"pm":["Yes","No","Yes","No","Yes","Yes","Yes"]},"Ximena Ramirez":{"am":["No","No","No","No","No","No","No"],"pm":["Yes","Yes","Yes","No","Yes","Yes","Yes"]},"Miranda Sanchez":{"am":["No","Yes","Yes","Yes","No","No","Yes"],"pm":["No","Yes","Yes","Yes","No","No","Yes"]},"Lizelle Arevalo":{"am":["Yes","Yes","Yes","Yes","No","No","Yes"],"pm":["No","No","Yes","Yes","No","No","No"]},"Lupita Padron":{"am":["No","Yes","Yes","Yes","No","No","No"],"pm":["Yes","Yes","No","No","Yes","Yes","No"]},"Jazlynn Gomez":{"am":["Yes","No","Yes","No","No","Yes","No"],"pm":["No","Yes","Yes","Yes","No","No","Yes"]},"Landry Mills":{"am":["Yes","R/O","R/O","R/O","R/O","Yes","No"],"pm":["No","R/O","R/O","R/O","R/O","Yes","No"]},"Jacob Mu\u00f1oz":{"am":["Yes","No","Yes","Yes","No","No","No"],"pm":["Yes","No","Yes","No","No","Yes","Yes"]},"Emily Koomey":{"am":["No","No","No","Yes","No","No","No"],"pm":["Yes","No","Yes","No","No","Yes","Yes"]},"Jayla Felix":{"am":["No","No","Yes","Yes","No","No","No"],"pm":["No","Yes","Yes","No","No","No","No"]},"Isabella Escamilla":{"am":["No","Yes","Yes","Yes","Yes","No","No"],"pm":["Yes","Yes","No","Yes","Yes","Yes","No"]},"Cynthia Moreno":{"am":["No","No","Yes","Yes","No","No","No"],"pm":["No","Yes","Yes","Yes","No","Yes","No"]},"Olivia Leonard":{"am":["No","No","Yes","No","Yes","No","Yes"],"pm":["Yes","Yes","Yes","Yes","Yes","No","No"]},"Ella Ward":{"am":["No","R/O","R/O","R/O","R/O","R/O","R/O"],"pm":["Yes","R/O","R/O","R/O","R/O","R/O","R/O"]},"Morgan Mills":{"am":["Yes","Yes","Yes","Yes","No","No","Yes"],"pm":["No","Yes","Yes","No","No","Yes","No"]},"Parker Morris":{"am":["Yes","Yes","Yes","Yes","Yes","Yes","Yes"],"pm":["Yes","Yes","Yes","Yes","Yes","Yes","Yes"]},"Peyton Morris":{"am":["Yes","Yes","Yes","Yes","Yes","Yes","Yes"],"pm":["Yes","Yes","Yes","Yes","Yes","Yes","Yes"]},"Andrea Argueta":{"am":["No","Yes","No","Yes","No","No","No"],"pm":["No","Yes","No","Yes","No","No","No"]},"Payton Casey":{"am":["Yes","Yes","Yes","No","No","No","Yes"],"pm":["Yes","Yes","Yes","Yes","No","No","Yes"]},"Adam Hantouli":{"am":["No","Yes","Yes","Yes","No","No","No"],"pm":["Yes","Yes","Yes","Yes","Yes","Yes","Yes"]},"Bianca Gomez":{"am":["Yes","Yes","Yes","Yes","No","Yes","Yes"],"pm":["Yes","No","Yes","Yes","Yes","Yes","Yes"]},"Jaxon":{"am":["Yes","Yes","Yes","Yes","No","No","No"],"pm":["No","Yes","Yes","Yes","No","No","Yes"]},"Melanie":{"am":["No","No","Yes","Yes","Yes","Yes","Yes"],"pm":["Yes","No","Yes","Yes","Yes","Yes","Yes"]}}};
+const BAKED_ALL_WEEKS = {"2026-07-09": {"Macy Lombardo": {"am": ["No", "10:45 AM", "10:45 AM", "No", "No", "No", "No"], "pm": ["No", "No", "No", "No", "No", "4:15 PM Open", "No"]}, "Wendy": {"am": ["10:45 AM", "10:45 AM", "10:45 AM", "No", "R/O", "R/O", "11:00 AM"], "pm": ["No", "No", "No", "No", "No", "No", "No"]}, "Christina": {"am": ["11:30", "10:45", "R/O", "R/O", "No", "No", "11:15"], "pm": ["No", "No", "No", "No", "No", "No", "No"]}, "Damon Neros": {"am": ["No", "No", "No", "No", "No", "No", "No"], "pm": ["No", "No", "3:45 PM", "No", "No", "No", "No"]}, "Monica Argueta": {"am": ["No", "No", "R/O", "10:45", "No", "No", "No"], "pm": ["5:00 PM", "R/O", "R/O", "R/O", "No", "No", "No"]}, "Nayeli A. Perez": {"am": ["No", "No", "No", "11:00", "No", "No", "No"], "pm": ["No", "No", "3:45 PM", "R/O", "No", "No", "No"]}, "Tori Lash": {"am": ["No", "No", "R/O", "No", "No", "5:00 PM", "No"], "pm": ["No", "No", "No", "R/O", "No", "No", "No"]}, "Brooke Koomey": {"am": ["R/O", "R/O", "R/O", "R/O", "No", "R/O", "R/O"], "pm": ["R/O", "No", "R/O", "R/O", "No", "R/O", "R/O"]}, "Ximena Ramirez": {"am": ["No", "No", "No", "No", "No", "No", "No"], "pm": ["No", "5:00 PM", "3:45 PM", "No", "4:15 PM", "5:00 PM", "5:15 PM Close"]}, "Miranda Sanchez": {"am": ["No", "No", "10:00 AM Open", "11:00", "No", "No", "10:00 AM Open"], "pm": ["No", "5:00 PM", "No", "No", "No", "No", "4:15 PM"]}, "Lizelle Arevalo": {"am": ["11:00", "Yes", "Yes", "10:00 AM Open", "No", "No", "10:45"], "pm": ["No", "No", "3:45 PM", "3:45 PM", "No", "No", "No"]}, "Lupita Padron": {"am": ["No", "11:30 AM Close", "11:30 AM Close", "No", "No", "10:00 AM Open", "No"], "pm": ["4:15 PM Open", "5:15 PM Close B", "No", "No", "5:30 PM Close B", "No", "No"]}, "Jazlynn Gomez": {"am": ["No", "No", "Yes", "No", "No", "11:00", "No"], "pm": ["No", "5:15 PM Close B", "R/O", "3:45 PM", "No", "No", "5:00 PM"]}, "Landry Mills": {"am": ["10:00 AM Open", "No", "11:30 AM Close", "Yes", "10:00 AM Open", "10:45", "Yes"], "pm": ["No", "No", "3:45 PM", "3:45 PM", "5:30 PM Close A", "5:30 PM Close A", "No"]}, "Jacob Muñoz": {"am": ["10:45", "No", "11:00", "11:00", "No", "No", "No"], "pm": ["5:15 PM Close C", "No", "3:45 PM", "No", "No", "No", "No"]}, "Emily Koomey": {"am": ["No", "No", "No", "11:00", "No", "No", "No"], "pm": ["5:15 PM Close A", "No", "5:15 PM Close B", "No", "No", "5:15 PM Close A", "5:15 PM Close B"]}, "Jayla Felix": {"am": ["No", "No", "5:00 PM", "11:00", "No", "No", "No"], "pm": ["No", "5:00 PM", "3:45 PM", "R/O", "No", "No", "No"]}, "Isabella Escamilla": {"am": ["No", "11:00", "11:00", "11:15", "11:15", "No", "No"], "pm": ["Yes", "4:15 PM Open", "No", "3:45 PM", "5:00 PM", "5:00 PM", "No"]}, "Cynthia Moreno": {"am": ["No", "No", "No", "11:00", "No", "No", "No"], "pm": ["No", "5:00 PM", "1-V", "4:15 PM Close B", "No", "5:00 PM", "No"]}, "Olivia Leonard": {"am": ["No", "No", "10:45", "No", "Yes", "No", "Yes"], "pm": ["4:45 PM", "4:45 PM", "3:45 PM", "4:15 PM", "4:45 PM", "No", "R/O"]}, "Ella Ward": {"am": ["No", "No", "No", "11:30 AM Close", "No", "No", "No"], "pm": ["5:15 PM Close B", "R/O", "5:15 PM Close A", "R/O", "No", "5:15 PM Close B", "4:15 PM Open"]}, "Morgan Mills": {"am": ["11:30 AM Close", "Yes", "Yes", "R/O", "No", "No", "Yes"], "pm": ["No", "5:00 PM", "5:15 PM Close A", "No", "No", "5:00 PM", "No"]}, "Parker Morris": {"am": ["5:00 PM", "Yes", "Yes", "11:00", "Yes", "Yes", "Yes"], "pm": ["No", "No", "No", "Yes", "5:00 PM", "5:00 PM", "5:00 PM"]}, "Peyton Morris": {"am": ["5:00 PM", "Yes", "Yes", "11:00", "Yes", "Yes", "Yes"], "pm": ["No", "No", "No", "Yes", "5:00 PM", "No", "No"]}, "Andrea Argueta": {"am": ["No", "No", "No", "11:00", "No", "No", "No"], "pm": ["No", "R/O", "3:15 PM", "No", "No", "No", "5:00 PM"]}, "Payton Casey": {"am": ["Yes", "Yes", "Yes", "No", "No", "No", "Yes"], "pm": ["5:00 PM", "5:00 PM", "3:45 PM", "4:15 PM Close A", "No", "No", "5:00 PM"]}, "Adam Hantouli": {"am": ["No", "11:00", "11:00", "Yes", "No", "No", "No"], "pm": ["No", "5:00 PM", "5:00 PM", "1-V", "5:00 PM", "R/O", "R/O"]}, "Bianca Gomez": {"am": ["No", "No", "Yes", "11:00", "No", "11:15", "Yes"], "pm": ["No", "R/O", "3:45 PM", "Yes", "5:30 PM Close C", "5:00 PM", "5:00 PM"]}, "Jaxon": {"am": ["No", "No", "11:15", "11:00", "No", "No", "No"], "pm": ["No", "5:15 PM Close C", "3:45 PM", "3:45 PM", "No", "No", "5:00 PM"]}, "Melanie": {"am": ["No", "Yes", "11:00", "11:00", "11:00", "11:30 AM Close", "Yes"], "pm": ["5:00 PM", "No", "Yes", "3:45 PM", "4:15 PM Open", "Yes", "4:45 PM"]}}, "2026-07-16": {"Macy Lombardo": {"am": ["No", "No", "10:00 AM Open", "No", "No", "No", "No"], "pm": ["4:15 PM Open", "No", "No", "No", "No", "4:15 PM Open", "No"]}, "Wendy": {"am": ["10:45 AM", "11:00 AM", "No", "No", "10:00 AM Open", "9:45 AM", "11:15 AM Close"], "pm": ["No", "No", "No", "No", "No", "No", "No"]}, "Christina": {"am": ["11:30 AM Close", "10:45 AM", "11:00 AM", "10:45 AM", "No", "No", "No"], "pm": ["No", "No", "No", "No", "No", "No", "No"]}, "Damon Neros": {"am": ["No", "No", "No", "No", "No", "No", "No"], "pm": ["No", "No", "3:45 PM Close B", "No", "No", "No", "No"]}, "Monica Argueta": {"am": ["No", "No", "No", "R/O", "No", "No", "No"], "pm": ["4:45 PM", "5:00 PM", "3:45 PM", "R/O", "No", "5:00 PM", "No"]}, "Nayeli A. Perez": {"am": ["No", "No", "No", "10:00 AM Open", "No", "No", "No"], "pm": ["No", "No", "3:45 PM Close C", "No", "No", "No", "No"]}, "Tori Lash": {"am": ["No", "No", "R/O", "No", "No", "No", "No"], "pm": ["No", "No", "R/O", "3:45 PM Close B", "No", "4:45 PM", "No"]}, "Brooke Koomey": {"am": ["No", "No", "No", "11:00 AM", "No", "No", "No"], "pm": ["5:15 PM Close A", "No", "3:45 PM", "No", "4:15 PM Open", "5:30 PM Close C", "5:15 PM Close A"]}, "Ximena Ramirez": {"am": ["No", "No", "No", "R/O", "No", "No", "No"], "pm": ["No", "5:00 PM", "3:45 PM", "R/O", "5:15 PM", "5:00 PM", "5:15 PM Close C"]}, "Miranda Sanchez": {"am": ["No", "11:30 AM Close", "Yes", "11:00 AM", "No", "No", "10:45 AM"], "pm": ["No", "5:00 PM", "3:45 PM", "Yes", "No", "No", "Yes"]}, "Lizelle Arevalo": {"am": ["11:00 AM", "10:00 AM Open", "11:00 AM", "10:00 AM Open", "No", "No", "10:45 AM"], "pm": ["No", "No", "3:45 PM", "3:45 PM", "No", "No", "No"]}, "Lupita Padron": {"am": ["No", "Yes", "11:30 AM Close", "11:00 AM", "No", "No", "No"], "pm": ["Yes", "5:15 PM Close A", "No", "No", "5:30 PM Close B", "5:15 PM", "No"]}, "Jazlynn Gomez": {"am": ["Yes", "No", "R/O", "No", "No", "10:45 AM", "10:15 AM Open"], "pm": ["No", "5:15 PM Close B", "R/O", "3:45 PM", "No", "No", "No"]}, "Landry Mills": {"am": ["10:00 AM Open", "Yes", "Yes", "No", "10:00 AM Open", "10:15 AM Open", "No"], "pm": ["No", "No", "3:45 PM", "3:45 PM", "5:30 PM Close A", "Yes", "No"]}, "Jacob Muñoz": {"am": ["R/O", "R/O", "R/O", "R/O", "R/O", "R/O", "No"], "pm": ["R/O", "R/O", "R/O", "R/O", "R/O", "R/O", "No"]}, "Emily Koomey": {"am": ["No", "No", "No", "11:00 AM", "No", "No", "No"], "pm": ["5:15 PM Close B", "No", "3:45 PM", "No", "No", "5:30 PM Close B", "4:45 PM"]}, "Jayla Felix": {"am": ["No", "No", "No", "11:00 AM", "No", "No", "No"], "pm": ["No", "5:00 PM", "3:45 PM", "No", "No", "No", "No"]}, "Isabella Escamilla": {"am": ["No", "Yes", "11:00 AM", "11:15 AM", "11:15 AM Close", "No", "No"], "pm": ["Yes", "4:15 PM Open", "No", "3:45 PM", "5:00 PM", "Yes", "No"]}, "Cynthia Moreno": {"am": ["No", "No", "Yes", "11:00 AM", "11:00 AM", "No", "No"], "pm": ["No", "5:15 PM Close C", "1-V", "3:45 PM", "No", "5:00 PM", "No"]}, "Olivia Leonard": {"am": ["No", "No", "10:45 AM", "No", "Yes", "No", "Yes"], "pm": ["4:45 PM", "4:45 PM", "3:45 PM", "3:45 PM Close C", "4:45 PM", "No", "No"]}, "Ella Ward": {"am": ["No", "No", "No", "11:30 AM Close", "No", "No", "No"], "pm": ["5:15 PM Close C", "No", "Yes", "No", "No", "5:30 PM Close A", "4:15 PM Open"]}, "Morgan Mills": {"am": ["11:30 AM Close", "Yes", "Yes", "Yes", "No", "No", "Yes"], "pm": ["No", "5:00 PM", "3:45 PM Close A", "No", "No", "5:00 PM", "5:00 PM"]}, "Parker Morris": {"am": ["Yes", "Yes", "11:00 AM", "Yes", "11:15 AM Close", "11:30 AM Close", "Yes"], "pm": ["5:00 PM", "Yes", "Yes", "3:45 PM", "Yes", "Yes", "Yes"]}, "Peyton Morris": {"am": ["Yes", "11:00 AM", "Yes", "Yes", "Yes", "Yes", "Yes"], "pm": ["5:00 PM", "Yes", "Yes", "3:45 PM", "5:00 PM", "5:00 PM", "5:00 PM"]}, "Andrea Argueta": {"am": ["No", "No", "No", "Yes", "No", "No", "No"], "pm": ["No", "5:00 PM", "3:45 PM", "No", "No", "No", "No"]}, "Payton Casey": {"am": ["Yes", "Yes", "Yes", "No", "No", "No", "Yes"], "pm": ["Yes", "5:00 PM", "3:45 PM", "3:45 PM Close A", "No", "No", "5:15 PM Close B"]}, "Adam Hantouli": {"am": ["R/O", "R/O", "R/O", "R/O", "No", "No", "No"], "pm": ["R/O", "R/O", "R/O", "R/O", "5:00 PM", "5:00 PM", "5:00 PM"]}, "Bianca Gomez": {"am": ["Yes", "Yes", "11:00 AM", "11:00 AM", "No", "11:15 AM", "Yes"], "pm": ["Yes", "No", "3:45 PM", "Yes", "5:30 PM Close C", "Yes", "5:00 PM"]}, "Jaxon": {"am": ["Yes", "11:00 AM", "11:15 AM", "11:00 AM", "No", "No", "No"], "pm": ["5:00 PM", "5:00 PM", "3:45 PM", "3:45 PM", "No", "No", "5:00 PM"]}, "Melanie": {"am": ["No", "No", "11:00 AM", "11:00 AM", "No", "No", "No"], "pm": ["5:00 PM", "5:00 PM", "Yes", "3:45 PM", "No", "No", "5:00 PM"]}}, "2026-07-23": {"Macy Lombardo": {"am": ["No", "No", "Yes", "No", "No", "No", "No"], "pm": ["Yes", "No", "Yes", "No", "No", "Yes", "No"]}, "Wendy": {"am": ["Yes", "Yes", "No", "No", "Yes", "Yes", "Yes"], "pm": ["No", "No", "No", "No", "No", "No", "No"]}, "Christina": {"am": ["Yes", "Yes", "Yes", "Yes", "No", "No", "Yes"], "pm": ["No", "No", "No", "No", "No", "No", "No"]}, "Damon Neros": {"am": ["No", "No", "No", "No", "No", "No", "No"], "pm": ["No", "No", "Yes", "No", "No", "No", "No"]}, "Monica Argueta": {"am": ["No", "Yes", "Yes", "Yes", "No", "No", "No"], "pm": ["Yes", "Yes", "Yes", "No", "No", "Yes", "No"]}, "Nayeli A. Perez": {"am": ["No", "No", "No", "Yes", "No", "No", "No"], "pm": ["No", "No", "Yes", "No", "No", "No", "No"]}, "Tori Lash": {"am": ["No", "No", "Yes", "No", "No", "No", "No"], "pm": ["No", "No", "Yes", "Yes", "No", "Yes", "No"]}, "Brooke Koomey": {"am": ["No", "No", "No", "Yes", "No", "No", "No"], "pm": ["Yes", "No", "Yes", "No", "Yes", "Yes", "Yes"]}, "Ximena Ramirez": {"am": ["No", "No", "No", "No", "No", "No", "No"], "pm": ["Yes", "Yes", "Yes", "No", "Yes", "Yes", "Yes"]}, "Miranda Sanchez": {"am": ["No", "Yes", "Yes", "Yes", "No", "No", "Yes"], "pm": ["No", "Yes", "Yes", "Yes", "No", "No", "Yes"]}, "Lizelle Arevalo": {"am": ["Yes", "Yes", "Yes", "Yes", "No", "No", "Yes"], "pm": ["No", "No", "Yes", "Yes", "No", "No", "No"]}, "Lupita Padron": {"am": ["No", "Yes", "Yes", "Yes", "No", "No", "No"], "pm": ["Yes", "Yes", "No", "No", "Yes", "Yes", "No"]}, "Jazlynn Gomez": {"am": ["Yes", "No", "Yes", "No", "No", "Yes", "No"], "pm": ["No", "Yes", "Yes", "Yes", "No", "No", "Yes"]}, "Landry Mills": {"am": ["Yes", "R/O", "R/O", "R/O", "R/O", "Yes", "No"], "pm": ["No", "R/O", "R/O", "R/O", "R/O", "Yes", "No"]}, "Jacob Muñoz": {"am": ["Yes", "Yes", "Yes", "Yes", "No", "No", "No"], "pm": ["Yes", "No", "Yes", "No", "No", "No", "No"]}, "Emily Koomey": {"am": ["No", "No", "No", "Yes", "No", "No", "No"], "pm": ["Yes", "No", "Yes", "No", "No", "Yes", "Yes"]}, "Jayla Felix": {"am": ["No", "No", "Yes", "Yes", "No", "No", "No"], "pm": ["No", "Yes", "Yes", "No", "No", "No", "No"]}, "Isabella Escamilla": {"am": ["No", "Yes", "Yes", "Yes", "Yes", "No", "No"], "pm": ["Yes", "Yes", "No", "Yes", "Yes", "Yes", "No"]}, "Cynthia Moreno": {"am": ["No", "No", "Yes", "Yes", "No", "No", "No"], "pm": ["No", "Yes", "Yes", "Yes", "No", "Yes", "No"]}, "Olivia Leonard": {"am": ["No", "No", "Yes", "No", "Yes", "No", "Yes"], "pm": ["Yes", "Yes", "Yes", "Yes", "Yes", "No", "No"]}, "Ella Ward": {"am": ["No", "R/O", "R/O", "R/O", "R/O", "R/O", "R/O"], "pm": ["Yes", "R/O", "R/O", "R/O", "R/O", "R/O", "R/O"]}, "Morgan Mills": {"am": ["Yes", "Yes", "Yes", "Yes", "No", "No", "Yes"], "pm": ["No", "Yes", "Yes", "No", "No", "Yes", "No"]}, "Parker Morris": {"am": ["Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"], "pm": ["Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"]}, "Peyton Morris": {"am": ["Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"], "pm": ["Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"]}, "Andrea Argueta": {"am": ["No", "Yes", "No", "Yes", "No", "No", "No"], "pm": ["No", "Yes", "No", "Yes", "No", "No", "No"]}, "Payton Casey": {"am": ["Yes", "Yes", "Yes", "No", "No", "No", "Yes"], "pm": ["Yes", "Yes", "Yes", "Yes", "No", "No", "Yes"]}, "Adam Hantouli": {"am": ["No", "Yes", "Yes", "Yes", "No", "No", "No"], "pm": ["Yes", "Yes", "Yes", "Yes", "Yes", "Yes", "Yes"]}, "Bianca Gomez": {"am": ["Yes", "Yes", "Yes", "Yes", "No", "Yes", "Yes"], "pm": ["Yes", "No", "Yes", "Yes", "Yes", "Yes", "Yes"]}, "Jaxon": {"am": ["Yes", "Yes", "Yes", "Yes", "No", "No", "No"], "pm": ["No", "Yes", "Yes", "Yes", "No", "No", "Yes"]}, "Melanie": {"am": ["No", "No", "Yes", "Yes", "Yes", "Yes", "Yes"], "pm": ["Yes", "No", "Yes", "Yes", "Yes", "Yes", "Yes"]}}};
 
 let currentDay = 0;
 let filterState = { am: "scheduled", pm: "scheduled" };
@@ -2149,7 +2136,7 @@ function setViewMode(mode){
   viewMode = mode;
   const tog = (id, m) => { try{ document.getElementById(id).classList.toggle("active", mode===m); }catch(e){} };
   tog("viewAllBtn","all"); tog("viewPersonBtn","person"); tog("viewGridBtn","grid");
-  tog("viewHoursBtn","hours"); tog("viewNotesBtn","notes");
+  tog("viewHoursBtn","hours"); tog("viewNotesBtn","notes"); tog("viewCallOutBtn","callout");
 
   const show = (id, cond, flex) => { try{ document.getElementById(id).style.display = cond?(flex?"flex":"block"):"none"; }catch(e){} };
   show("personPicker", mode==="person");
@@ -2160,12 +2147,14 @@ function setViewMode(mode){
   show("hoursView",    mode==="hours");
   show("notesView",    mode==="notes");
   show("suggestView",  mode==="suggest");
+  show("calloutView",  mode==="callout");
 
   try{ if(mode==="person") renderPersonWeek(); }catch(e){}
   try{ if(mode==="grid")   renderGridView();   }catch(e){}
   try{ if(mode==="hours")  renderHoursView();  }catch(e){}
   if(mode==="notes")   renderNotesView().catch(()=>{});
   if(mode==="suggest") try{ renderSuggestView(); }catch(e){}
+  if(mode==="callout") try{ renderCallOutView(); }catch(e){}
 }
 
 function findFirstForDay(period, dayIdx, shiftList){
@@ -2368,16 +2357,12 @@ function renderGridView(){
 
     // Days-off warning cell at the end of the row
     const offCount = daysOffCount(name);
-    const streak = consecutiveStreak(name);
-    const streakAlert = streak >= STREAK_LIMIT;
     const warnCell = document.createElement("div");
-    warnCell.className = `gt-cell gt-warn-cell ${offCount <= 1 ? "gw-low" : "gw-ok"}${streakAlert ? " gw-streak-alert" : ""}`;
-    warnCell.innerHTML = `${offCount}${streakAlert ? `<span class="gw-streak">⚠${streak} in a row</span>` : ""}`;
-    warnCell.title = (streakAlert
-      ? `⚠ ${name} is scheduled ${streak} days in a row (counting last week). `
-      : "") + (offCount <= 1
+    warnCell.className = `gt-cell gt-warn-cell ${offCount <= 1 ? "gw-low" : "gw-ok"}`;
+    warnCell.textContent = offCount;
+    warnCell.title = offCount <= 1
       ? `${name} has only ${offCount} day${offCount === 1 ? "" : "s"} off this week`
-      : `${name} has ${offCount} days off this week`);
+      : `${name} has ${offCount} days off this week`;
     tableEl.appendChild(warnCell);
   });
 
@@ -2868,282 +2853,6 @@ function applySuggestion(name, period, dayIdx){
   showLockedToast(`${name} added to ${DAYS[dayIdx].dow} ${period.toUpperCase()} (${openSlot})`);
 }
 
-/* ---------------- Consecutive-days-in-a-row detection ---------------- */
-const STREAK_LIMIT = 5;
-
-// Get another week's staff data without disturbing the current week:
-// live staff if it IS the current week, else saved storage, else the baked archive.
-function getWeekStaffSnapshot(iso){
-  if(iso === weekStartDate) return staff;
-  try{
-    const v = localStorage.getItem(staffKeyFor(iso));
-    if(v) return JSON.parse(v);
-  }catch(e){}
-  if(BAKED_ALL_WEEKS[iso]) return BAKED_ALL_WEEKS[iso];
-  return null;
-}
-
-function worksOn(weekData, name, dayIdx){
-  if(!weekData || !weekData[name]) return false;
-  return isRealAM(weekData[name].am[dayIdx]) || isRealPM(weekData[name].pm[dayIdx]);
-}
-
-// Longest run of consecutive worked days that touches the current week,
-// looking back into the previous week's schedule (saved or archived).
-// extraDayIdx lets the auto-builder ask "what WOULD the streak be if I
-// also scheduled this person on day X?"
-function consecutiveStreak(name, extraDayIdx){
-  const prevIso = addDaysToIso(weekStartDate, -7);
-  const prevWeek = getWeekStaffSnapshot(prevIso);
-  const worked = [];
-  for(let i=0;i<7;i++) worked.push(worksOn(prevWeek, name, i));
-  for(let i=0;i<7;i++) worked.push(worksOn(staff, name, i) || (extraDayIdx === i));
-
-  let best = 0, cur = 0, bestEnd = -1;
-  for(let i=0;i<14;i++){
-    cur = worked[i] ? cur + 1 : 0;
-    if(cur > best || (cur === best && worked[i])){ best = Math.max(best, cur); if(cur === best) bestEnd = i; }
-  }
-  // Only care about runs that include at least one current-week day
-  if(bestEnd < 7){
-    // recompute best run that ends inside the current week
-    best = 0; cur = 0;
-    for(let i=0;i<14;i++){
-      cur = worked[i] ? cur + 1 : 0;
-      if(i >= 7 && cur > best) best = cur;
-    }
-  }
-  return best;
-}
-
-/* ---------------- Auto-Build Week ---------------- */
-let autoBuildSnapshot = null;
-
-function availableShiftCount(name){
-  let n = 0;
-  for(let i=0;i<7;i++){
-    const a = staff[name].am[i], p = staff[name].pm[i];
-    if(a === "Yes" || isRealAM(a)) n++;
-    if(p === "Yes" || isRealPM(p)) n++;
-  }
-  return n;
-}
-
-function currentHeadcount(period, dayIdx){
-  return Object.values(staff).filter(s =>
-    period === "am" ? isRealAM(s.am[dayIdx]) : isRealPM(s.pm[dayIdx])
-  ).length;
-}
-
-// Pick an open slot label for a person, honoring the no-close-on-a-double rule
-// and Macy's opener preference. Returns null if nothing suitable is open.
-function pickSlotLabel(name, period, dayIdx){
-  const options = (period === "am" ? amOptionsFor(dayIdx) : pmOptionsFor(dayIdx)) || [];
-  const onDouble = period === "am"
-    ? isRealPM(staff[name].pm[dayIdx])
-    : isRealAM(staff[name].am[dayIdx]);
-
-  let usable = options.filter(o => countFilled(period, dayIdx, o, null) < capacityFor(dayIdx, o));
-  if(onDouble) usable = usable.filter(o => !/Close/i.test(o));
-
-  if(usable.length === 0) return null;
-
-  // Macy prefers AM opens
-  if(name === "Macy Lombardo" && period === "am"){
-    const open = usable.find(o => /Open/i.test(o));
-    if(open) return open;
-  }
-  // Fill non-close labels first so close slots stay open for dedicated closers
-  const nonClose = usable.find(o => !/Close/i.test(o));
-  return nonClose || usable[0];
-}
-
-function autoAssign(name, period, dayIdx, changes){
-  const label = pickSlotLabel(name, period, dayIdx);
-  if(!label) return false;
-  staff[name][period][dayIdx] = label;
-  changes.push({name, period, dayIdx});
-  return true;
-}
-
-function autoBuildSchedule(){
-  if(typeof isLocked !== "undefined" && isLocked){
-    showLockedToast("Turn off Temp Override before auto-building.");
-    return;
-  }
-  if(!confirm("Auto-build this week?\n\nEvery 'Yes' cell is fair game. Nothing already assigned gets touched, every auto-placed shift is flagged for review, and you can undo from the same menu.")) return;
-
-  autoBuildSnapshot = JSON.parse(JSON.stringify(staff));
-  const changes = [];
-  const names = Object.keys(staff);
-  const twins = ["Parker Morris","Peyton Morris"];
-
-  // ---- Pass 1: staff with 3 or fewer available shifts get placed first ----
-  names
-    .filter(n => availableShiftCount(n) > 0 && availableShiftCount(n) <= 3)
-    .forEach(n=>{
-      for(let d=0; d<7; d++){
-        ["am","pm"].forEach(period=>{
-          if(staff[n][period][d] !== "Yes") return;
-          if(n === "Macy Lombardo" && period === "pm" && d === 2) return; // never Sat PM
-          const target = targets[period][d];
-          if(currentHeadcount(period, d) >= target) return;
-          if(consecutiveStreak(n, d) >= STREAK_LIMIT && !worksOn(staff, n, d)) return;
-          autoAssign(n, period, d, changes);
-        });
-      }
-    });
-
-  // ---- Pass 2: fill remaining gaps, best candidate first ----
-  for(let d=0; d<7; d++){
-    ["am","pm"].forEach(period=>{
-      let guard = 60;
-      while(currentHeadcount(period, d) < targets[period][d] && guard-- > 0){
-        const candidates = names.filter(n => {
-          if(staff[n][period][d] !== "Yes") return false;
-          if(n === "Macy Lombardo" && period === "pm" && d === 2) return false;
-          return true;
-        });
-        if(candidates.length === 0) break;
-
-        const scored = candidates.map(n=>{
-          let score = 0;
-          const otherVal = period === "am" ? staff[n].pm[d] : staff[n].am[d];
-          const wouldDouble = period === "am" ? isRealPM(otherVal) : isRealAM(otherVal);
-          if(!wouldDouble) score += 1000;                       // avoid doubles
-          score -= weeklyShiftCount(n) * 10;                    // balance the load
-          if(consecutiveStreak(n, d) >= STREAK_LIMIT && !worksOn(staff, n, d)) score -= 100000; // 5-in-a-row guard
-          if(twins.includes(n)){
-            const other = twins.find(t => t !== n);
-            const otherCell = staff[other][period][d];
-            if(isRealAM(otherCell) || isRealPM(otherCell)) score += 500;  // twin already on — join them
-            else if(otherCell === "Yes" && (targets[period][d] - currentHeadcount(period, d)) >= 2) score += 200;
-          }
-          return {n, score};
-        }).sort((a,b)=> b.score - a.score);
-
-        if(scored[0].score <= -50000) break; // only streak-blocked people left
-        if(!autoAssign(scored[0].n, period, d, changes)) break; // no open slot labels
-      }
-    });
-  }
-
-  // ---- Pass 3: when Emily, Brooke & Ella all work PM, they close together ----
-  const trio = ["Emily Koomey","Brooke Koomey","Ella Ward"];
-  for(let d=0; d<7; d++){
-    const allOnPM = trio.every(n => isRealPM(staff[n].pm[d]));
-    if(!allOnPM) continue;
-    const closeLabels = (pmOptionsFor(d) || []).filter(o => /Close/i.test(o));
-    trio.forEach((n, i)=>{
-      const want = closeLabels[i];
-      if(!want || staff[n].pm[d] === want) return;
-      // If someone else holds that close slot, swap shifts with them
-      const holder = Object.keys(staff).find(o => o !== n && staff[o].pm[d] === want);
-      const old = staff[n].pm[d];
-      staff[n].pm[d] = want;
-      if(holder){
-        staff[holder].pm[d] = old;
-        changes.push({name: holder, period: "pm", dayIdx: d});
-      }
-      changes.push({name: n, period: "pm", dayIdx: d});
-    });
-  }
-
-  // Flag every auto-touched cell for review
-  changes.forEach(c=>{
-    if(!reviewFlags.some(f => f.name===c.name && f.period===c.period && f.dayIdx===c.dayIdx)){
-      reviewFlags.push(c);
-    }
-  });
-
-  // Remaining gaps summary
-  const gaps = [];
-  for(let d=0; d<7; d++){
-    ["am","pm"].forEach(period=>{
-      const short = targets[period][d] - currentHeadcount(period, d);
-      if(short > 0) gaps.push(`${DAYS[d].dow} ${period.toUpperCase()} -${short}`);
-    });
-  }
-
-  saveStaffData();
-  render();
-  if(changes.length === 0){
-    showLockedToast("Nothing to build — no available staff fit the open gaps.");
-  } else if(gaps.length === 0){
-    showLockedToast(`Auto-built ${changes.length} shift${changes.length===1?"":"s"} — every day hits target. Review the flagged cells.`);
-  } else {
-    showLockedToast(`Auto-built ${changes.length} shift${changes.length===1?"":"s"}. Still short: ${gaps.join(", ")}`);
-  }
-}
-
-function undoAutoBuild(){
-  if(!autoBuildSnapshot){
-    showLockedToast("Nothing to undo — no auto-build this session.");
-    return;
-  }
-  staff = JSON.parse(JSON.stringify(autoBuildSnapshot));
-  autoBuildSnapshot = null;
-  reviewFlags = [];
-  saveStaffData();
-  render();
-  showLockedToast("Auto-build undone — schedule restored.");
-}
-
-/* ---------------- Sync targets from Table & Server Count traffic ---------------- */
-// Reads the Table & Server Count app's saved days (shared storage inside the
-// Babe's Manager suite) and sets this week's targets to: average peak server
-// count per weekday, rounded up, plus 1 buffer — same math as its Trends tab.
-function syncTargetsFromTraffic(){
-  let dates = [];
-  try{ dates = JSON.parse(localStorage.getItem('tsc_dates') || '[]'); }catch(e){}
-  if(!dates.length){
-    alert("No Table & Server Count data found.\n\nThis works when both apps run inside the Babe's Manager suite (or the same browser) so they share storage. Log some days in Table & Server Count first.");
-    return;
-  }
-
-  const AM_SLOTS = 19; // matches the count app: slots 0-18 AM, 19+ PM
-  const byDay = {};
-  dates.forEach(date=>{
-    let data = null;
-    try{ data = JSON.parse(localStorage.getItem('tsc_data_'+date) || 'null'); }catch(e){}
-    if(!data || !data.day || !data.entries) return;
-    const peaks = {am: null, pm: null};
-    data.entries.forEach((e, i)=>{
-      const v = parseInt(e.servers);
-      if(isNaN(v)) return;
-      const k = i < AM_SLOTS ? 'am' : 'pm';
-      if(peaks[k] === null || v > peaks[k]) peaks[k] = v;
-    });
-    if(!byDay[data.day]) byDay[data.day] = {am:[], pm:[]};
-    if(peaks.am !== null) byDay[data.day].am.push(peaks.am);
-    if(peaks.pm !== null) byDay[data.day].pm.push(peaks.pm);
-  });
-
-  const changed = [];
-  DAYS.forEach((d, dayIdx)=>{
-    const dayName = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date(d.iso + "T00:00:00").getDay()];
-    const g = byDay[dayName];
-    if(!g) return;
-    ["am","pm"].forEach(period=>{
-      if(!g[period].length) return;
-      const avg = g[period].reduce((a,b)=>a+b,0) / g[period].length;
-      const suggested = Math.ceil(avg) + 1;
-      if(targets[period][dayIdx] !== suggested){
-        changed.push(`${d.dow} ${period.toUpperCase()} ${targets[period][dayIdx]}→${suggested}`);
-        targets[period][dayIdx] = suggested;
-      }
-    });
-  });
-
-  saveTargets();
-  render();
-  if(changed.length === 0){
-    showLockedToast("Targets already match your traffic data — no changes.");
-  } else {
-    showLockedToast(`Targets synced from traffic: ${changed.join(", ")}`);
-  }
-}
-
 async function manualReapply(){
   const applied = await applyTimeOffRequestsToCurrentWeek();
   applied.forEach(a => reviewFlags.push({name: a.name, period: a.period, dayIdx: a.dayIdx}));
@@ -3186,13 +2895,12 @@ async function showStorageDiagnostics(){
 }
 
 async function saveStaffData(){
-  try{
-    try{ localStorage.setItem(staffKeyFor(weekStartDate), JSON.stringify(staff)); }catch(e){}
-    await registerWeek(weekStartDate);
-    showSaveToast();
-  }catch(e){
-    console.error("Save failed", e);
-  }
+  // Stash the active week's data into the in-memory archive (and storage as a
+  // bonus) so edits survive switching weeks within a session and are always
+  // picked up by Export. Baked data still wins on a fresh file open.
+  BAKED_ALL_WEEKS[weekStartDate] = JSON.parse(JSON.stringify(staff));
+  try{ localStorage.setItem(staffKeyFor(weekStartDate), JSON.stringify(staff)); }catch(e){}
+  await registerWeek(weekStartDate);
 }
 
 // The week the literal `staff` data above was baked for at export time.
@@ -3200,55 +2908,33 @@ async function saveStaffData(){
 // correct for the current week (skip resetting) or stale from a previous
 // week we've switched away from (needs a real reset/load).
 let bakedDataWeek = "2026-07-16";
-const BAKED_DATA_VERSION = "2026-07-05-v5"; // bump this to force reload from baked data
+const BAKED_DATA_VERSION = "2026-07-08-v4"; // bump this to force reload from baked data
 
 async function loadStaffData(){
-  // Version check — if baked data is newer, wipe localStorage and reload from baked
-  try{
-    const savedVersion = localStorage.getItem('babes-data-version');
-    if(savedVersion !== BAKED_DATA_VERSION){
-      // Clear all week data keys so baked data takes over
-      const keysToRemove = [];
-      for(let i=0;i<localStorage.length;i++){
-        const k = localStorage.key(i);
-        if(k && k.startsWith('babes-schedule-data-')) keysToRemove.push(k);
-      }
-      keysToRemove.forEach(k => localStorage.removeItem(k));
-      localStorage.setItem('babes-data-version', BAKED_DATA_VERSION);
-    }
-  }catch(e){}
-
-  let result = null;
-  try{
-    result = (function(){ try{ const v=localStorage.getItem(staffKeyFor(weekStartDate)); return v?{value:v}:null; }catch(e){ return null; } })();
-  }catch(e){
-    result = null; // key doesn't exist yet — this is a brand new week
-  }
-
-  if(result && result.value){
-    const saved = JSON.parse(result.value);
+  // Always load from baked data — localStorage is only used to save changes made in the app
+  // On fresh file load, baked data wins every time
+  if(BAKED_ALL_WEEKS[weekStartDate]){
+    // Archive copy exists (baked at export time, or stashed by saveStaffData
+    // during this session) — always restore from it. This also fixes the bug
+    // where navigating away from the baked week and back showed stale data.
+    const archivedWeek = BAKED_ALL_WEEKS[weekStartDate];
     Object.keys(staff).forEach(name=>{
-      if(saved[name]) staff[name] = saved[name];
-      else staff[name] = JSON.parse(JSON.stringify(DEFAULT_STAFF_SNAPSHOT[name] || {am:["No","No","No","No","No","No","No"], pm:["No","No","No","No","No","No","No"]}));
+      if(archivedWeek[name]) staff[name] = JSON.parse(JSON.stringify(archivedWeek[name]));
+      else staff[name] = JSON.parse(JSON.stringify(DEFAULT_STAFF_SNAPSHOT[name] || {am:["No","No","No","No","No","No","No"],pm:["No","No","No","No","No","No","No"]}));
     });
   } else if(weekStartDate === bakedDataWeek){
-    // No storage yet, but this is exactly the week that was baked into the
-    // file at export time — the literal `staff` data IS the correct data
-    // for this week. Leave it alone instead of overwriting with baseline.
+    // staff object already contains the correct baked data — nothing to do
   } else if(BAKED_ALL_WEEKS[weekStartDate]){
-    // This week was previously built and saved into the permanent multi-week
-    // archive at some earlier export — restore it instead of resetting.
     const archived = BAKED_ALL_WEEKS[weekStartDate];
     Object.keys(staff).forEach(name=>{
       if(archived[name]) staff[name] = JSON.parse(JSON.stringify(archived[name]));
-      else staff[name] = JSON.parse(JSON.stringify(DEFAULT_STAFF_SNAPSHOT[name] || {am:["No","No","No","No","No","No","No"], pm:["No","No","No","No","No","No","No"]}));
+      else staff[name] = JSON.parse(JSON.stringify(DEFAULT_STAFF_SNAPSHOT[name] || {am:["No","No","No","No","No","No","No"],pm:["No","No","No","No","No","No","No"]}));
     });
   } else {
-    // A genuinely different week with no saved data — reset to baseline availability
+    // New week — start from default availability snapshot
     Object.keys(staff).forEach(name=>{
-      staff[name] = JSON.parse(JSON.stringify(DEFAULT_STAFF_SNAPSHOT[name] || {am:["No","No","No","No","No","No","No"], pm:["No","No","No","No","No","No","No"]}));
+      staff[name] = JSON.parse(JSON.stringify(DEFAULT_STAFF_SNAPSHOT[name] || {am:["No","No","No","No","No","No","No"],pm:["No","No","No","No","No","No","No"]}));
     });
-    console.log("No saved data for this week, reset to baseline availability");
   }
 }
 
@@ -3730,17 +3416,121 @@ async function exportSchedule(){
     }
   }
 
-  const blob = new Blob([html], { type: "text/html" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // Android (especially installed as a home-screen app) often silently blocks
+  // blob-link downloads. The native share sheet is the reliable path there —
+  // pick "Files", Drive, etc. to save the exported copy.
+  if(navigator.canShare && typeof File !== "undefined"){
+    try{
+      const shareFile = new File([html], filename, { type: "text/html" });
+      if(navigator.canShare({ files: [shareFile] })){
+        await navigator.share({ files: [shareFile], title: filename });
+        showSaveToast();
+        return;
+      }
+    }catch(e){
+      if(e && e.name === "AbortError"){
+        // Person closed the share sheet — treat as a cancel, not a failure
+        return;
+      }
+      // Share not allowed/supported after all — fall through to plain download
+    }
+  }
 
-  showSaveToast();
+  try{
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showSaveToast();
+  }catch(e){
+    alert("Export failed: " + (e && e.message ? e.message : e));
+  }
+}
+
+/* ---------------- Import ---------------- */
+// Imports weeks + time-off requests from a previously exported copy of this
+// app (an .html file) or from a JSON backup. Imported weeks overwrite any
+// same-dated weeks here; everything else is kept.
+function importSchedule(){
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".html,.htm,.json,text/html,application/json";
+  input.onchange = async ()=>{
+    const file = input.files && input.files[0];
+    if(!file) return;
+    try{
+      await importScheduleFile(file);
+    }catch(e){
+      alert("Import failed: " + (e && e.message ? e.message : e));
+    }
+  };
+  input.click();
+}
+
+async function importScheduleFile(file){
+  const text = await file.text();
+  let importedWeeks = null;
+  let importedRequests = null;
+
+  if(/^\s*[\{\[]/.test(text)){
+    // JSON backup
+    const data = JSON.parse(text);
+    importedWeeks = data.weeks || data.BAKED_ALL_WEEKS || (data["2026-01-01"] === undefined && !Array.isArray(data) ? null : null);
+    if(!importedWeeks && !Array.isArray(data)){
+      // Maybe the JSON is the archive object itself (keys are ISO dates)
+      const keys = Object.keys(data);
+      if(keys.length && keys.every(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) importedWeeks = data;
+    }
+    importedRequests = data.timeOffRequests || data.BAKED_TIMEOFF_REQUESTS || null;
+  } else {
+    // Exported HTML copy of this app — pull the baked data out of its source
+    const wm = text.match(/const BAKED_ALL_WEEKS = (\{[\s\S]*?\});/);
+    if(wm) importedWeeks = JSON.parse(wm[1]);
+    const rm = text.match(/const BAKED_TIMEOFF_REQUESTS = (\[[\s\S]*?\]);/);
+    if(rm) importedRequests = JSON.parse(rm[1]);
+  }
+
+  if(!importedWeeks || !Object.keys(importedWeeks).length){
+    alert("No schedule data found in that file. Import a copy exported from this app.");
+    return;
+  }
+
+  let weekCount = 0;
+  for(const wk of Object.keys(importedWeeks)){
+    BAKED_ALL_WEEKS[wk] = importedWeeks[wk];
+    try{ localStorage.setItem(staffKeyFor(wk), JSON.stringify(importedWeeks[wk])); }catch(e){}
+    await registerWeek(wk);
+    weekCount++;
+  }
+
+  let requestCount = 0;
+  if(importedRequests && importedRequests.length){
+    try{
+      const existing = await getTimeOffRequests();
+      const byId = {};
+      existing.forEach(r => { byId[r.id] = r; });
+      importedRequests.forEach(r => {
+        if(!byId[r.id]){ byId[r.id] = r; requestCount++; }
+      });
+      await saveTimeOffRequests(Object.values(byId));
+    }catch(e){
+      // requests are a bonus — don't fail the whole import over them
+    }
+  }
+
+  // Reload whatever week is on screen so imported data shows immediately
+  await loadStaffData();
+  await loadTargets();
+  updateWeekPillLabel();
+  populatePersonPicker();
+  render();
+
+  alert(`Import complete: ${weekCount} week(s)` + (requestCount ? `, ${requestCount} new time-off request(s)` : "") + " loaded. Export to make it permanent in a new copy.");
 }
 
 /* ---------------- Time Off Request Form ---------------- */
@@ -4773,6 +4563,189 @@ function applySuggestion(){
   setTimeout(()=>{ setViewMode('grid'); },1200);
 }
 
+/* ============================================================
+   CALL OUT LOG
+============================================================ */
+const CALLOUT_STORAGE_KEY = 'babes-callouts-v1';
+let callouts = [];
+let coFilter = 'all';
+
+function loadCallouts(){
+  try{
+    const raw = localStorage.getItem(CALLOUT_STORAGE_KEY);
+    callouts = raw ? JSON.parse(raw) : [];
+  }catch(e){ callouts = []; }
+}
+
+function saveCallouts(){
+  try{ localStorage.setItem(CALLOUT_STORAGE_KEY, JSON.stringify(callouts)); }catch(e){}
+}
+
+function populateCoNameSelect(){
+  const sel = document.getElementById('coName');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— Select —</option>';
+  const names = Object.keys(staff).sort();
+  names.forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = n;
+    opt.textContent = n;
+    sel.appendChild(opt);
+  });
+}
+
+function logCallOut(){
+  const name = document.getElementById('coName').value;
+  const date = document.getElementById('coDate').value;
+  const shift = document.getElementById('coShift').value;
+  const type = document.getElementById('coType').value;
+  const reason = document.getElementById('coReason').value.trim();
+
+  if(!name){ alert('Please select a staff member.'); return; }
+  if(!date){ alert('Please select a date.'); return; }
+
+  const entry = {
+    id: Date.now(),
+    name,
+    date,
+    shift,
+    type,
+    reason,
+    logged: new Date().toISOString()
+  };
+
+  callouts.unshift(entry);
+  saveCallouts();
+
+  // Reset form
+  document.getElementById('coName').value = '';
+  document.getElementById('coReason').value = '';
+
+  renderCallOutView();
+}
+
+function deleteCallOut(id){
+  if(!confirm('Delete this entry?')) return;
+  callouts = callouts.filter(c => c.id !== id);
+  saveCallouts();
+  renderCallOutView();
+}
+
+function setCoFilter(f){
+  coFilter = f;
+  ['all','callout','noshow','repeat'].forEach(k => {
+    const btn = document.getElementById('coFilter' + k.charAt(0).toUpperCase() + k.slice(1));
+    if(btn){
+      btn.style.background = k === f ? '#1a1a1a' : '#fff';
+      btn.style.color = k === f ? '#fff' : '#888';
+    }
+  });
+  renderCallOutList();
+}
+
+function getCoCountByName(){
+  const counts = {};
+  callouts.forEach(c => {
+    counts[c.name] = (counts[c.name] || 0) + 1;
+  });
+  return counts;
+}
+
+function renderCallOutView(){
+  loadCallouts();
+  populateCoNameSelect();
+  // Set today's date
+  const dateEl = document.getElementById('coDate');
+  if(dateEl && !dateEl.value){
+    const today = new Date();
+    dateEl.value = today.toISOString().split('T')[0];
+  }
+  renderCallOutList();
+}
+
+function renderCallOutList(){
+  const listEl = document.getElementById('calloutList');
+  if(!listEl) return;
+
+  const counts = getCoCountByName();
+
+  // Filter
+  let filtered = [...callouts];
+  if(coFilter === 'callout') filtered = filtered.filter(c => c.type === 'Call Out');
+  if(coFilter === 'noshow') filtered = filtered.filter(c => c.type === 'No Show');
+  if(coFilter === 'repeat') filtered = filtered.filter(c => counts[c.name] >= 3);
+
+  if(filtered.length === 0){
+    listEl.innerHTML = '<div style="font-family:Inter,sans-serif;font-size:13px;color:#bbb;padding:20px 0;">No entries yet.</div>';
+    return;
+  }
+
+  // Summary bar — repeat offenders
+  const repeats = Object.entries(counts).filter(([n,c]) => c >= 3).sort((a,b) => b[1]-a[1]);
+  let html = '';
+  if(repeats.length){
+    html += '<div style="background:#fde8e8;border-radius:12px;padding:12px 14px;margin-bottom:16px;border:1.5px solid #f5c0c0;">';
+    html += '<div style="font-family:Oswald,sans-serif;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#c0392b;margin-bottom:8px;">🚨 Repeat Offenders (3+)</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+    repeats.forEach(([name,count]) => {
+      html += `<div style="background:#c0392b;color:#fff;border-radius:20px;padding:4px 12px;font-family:Oswald,sans-serif;font-size:12px;font-weight:600;">${name.split(' ')[0]} · ${count}</div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // Entry cards
+  const typeColors = {
+    'Call Out': '#e07b00',
+    'No Show': '#c0392b',
+    'Late': '#2471a3',
+    'Left Early': '#7d3c98'
+  };
+
+  filtered.forEach(c => {
+    const count = counts[c.name];
+    const isRepeat = count >= 3;
+    const color = typeColors[c.type] || '#888';
+    const dateStr = c.date ? new Date(c.date + 'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) : c.date;
+
+    html += `<div style="background:#fff;border-radius:12px;border:1.5px solid ${isRepeat?'#f5c0c0':'#e0ddd5'};padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div>
+          <span style="font-family:Oswald,sans-serif;font-size:15px;font-weight:700;color:#1a1a1a;">${c.name}</span>
+          ${isRepeat ? `<span style="margin-left:8px;background:#c0392b;color:#fff;border-radius:10px;padding:2px 8px;font-family:monospace;font-size:10px;font-weight:700;">${count}x</span>` : ''}
+        </div>
+        <button onclick="deleteCallOut(${c.id})" style="background:none;border:none;color:#ccc;font-size:16px;cursor:pointer;padding:0 4px;">✕</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+        <span style="background:${color};color:#fff;border-radius:8px;padding:3px 10px;font-family:Oswald,sans-serif;font-size:11px;font-weight:600;">${c.type}</span>
+        <span style="background:#f0ede8;color:#555;border-radius:8px;padding:3px 10px;font-family:Inter,sans-serif;font-size:11px;">${dateStr}</span>
+        <span style="background:#f0ede8;color:#555;border-radius:8px;padding:3px 10px;font-family:Inter,sans-serif;font-size:11px;">${c.shift} shift</span>
+      </div>
+      ${c.reason ? `<div style="font-family:Inter,sans-serif;font-size:12px;color:#666;margin-top:4px;">${c.reason}</div>` : ''}
+    </div>`;
+  });
+
+  listEl.innerHTML = html;
+}
+
+/* ── Reset to latest baked data ── */
+function resetToLatest(){
+  if(!confirm('This will reset the schedule to the latest version and clear any manual changes you made in the app. Continue?')) return;
+  try{
+    const keysToRemove = [];
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && (k.startsWith('babes-schedule-data-') || k.startsWith('babes-data-version') || k.startsWith('babes-targets-'))){
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    showLockedToast('✅ Reset to latest — reloading…');
+    setTimeout(() => location.reload(), 1000);
+  }catch(e){
+    alert('Reset failed: ' + e.message);
+  }
+}
+
 init();
 </script>
 
@@ -4799,5 +4772,65 @@ init();
   </div>
   <div id="suggestStatus" style="font-family:Inter,sans-serif;font-size:13px;color:#888;margin-bottom:10px;"></div>
   <div id="suggestGrid" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
+</div>
+
+<div id="calloutView" style="display:none;padding:16px 0 60px;">
+  <div style="font-family:Oswald,sans-serif;font-size:22px;font-weight:700;letter-spacing:.05em;margin-bottom:4px;">📵 Call Out Log</div>
+  <div style="font-family:Inter,sans-serif;font-size:12px;color:#888;margin-bottom:18px;">Track callouts, no-shows, and late arrivals</div>
+
+  <!-- Log form -->
+  <div style="background:#fff;border-radius:14px;border:1.5px solid #e0ddd5;padding:16px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+    <div style="font-family:Oswald,sans-serif;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:12px;">Log New Call Out</div>
+
+    <div style="margin-bottom:10px;">
+      <label style="font-family:Inter,sans-serif;font-size:11px;color:#888;display:block;margin-bottom:4px;">Staff Member</label>
+      <select id="coName" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e0ddd5;font-family:Inter,sans-serif;font-size:14px;background:#fff;box-sizing:border-box;">
+        <option value="">— Select —</option>
+      </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div>
+        <label style="font-family:Inter,sans-serif;font-size:11px;color:#888;display:block;margin-bottom:4px;">Date</label>
+        <input type="date" id="coDate" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e0ddd5;font-family:Inter,sans-serif;font-size:14px;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-family:Inter,sans-serif;font-size:11px;color:#888;display:block;margin-bottom:4px;">Shift</label>
+        <select id="coShift" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e0ddd5;font-family:Inter,sans-serif;font-size:14px;background:#fff;box-sizing:border-box;">
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+          <option value="Both">Both</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-bottom:10px;">
+      <label style="font-family:Inter,sans-serif;font-size:11px;color:#888;display:block;margin-bottom:4px;">Type</label>
+      <select id="coType" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e0ddd5;font-family:Inter,sans-serif;font-size:14px;background:#fff;box-sizing:border-box;">
+        <option value="Call Out">Call Out</option>
+        <option value="No Show">No Show</option>
+        <option value="Late">Late Arrival</option>
+        <option value="Left Early">Left Early</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label style="font-family:Inter,sans-serif;font-size:11px;color:#888;display:block;margin-bottom:4px;">Notes / Reason</label>
+      <textarea id="coReason" rows="2" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e0ddd5;font-family:Inter,sans-serif;font-size:14px;resize:none;box-sizing:border-box;" placeholder="Optional reason or notes…"></textarea>
+    </div>
+
+    <button onclick="logCallOut()" style="width:100%;padding:12px;border-radius:10px;border:none;background:#c0392b;color:#fff;font-family:Oswald,sans-serif;font-size:14px;font-weight:600;letter-spacing:.08em;cursor:pointer;">LOG CALL OUT</button>
+  </div>
+
+  <!-- Filter tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+    <button class="co-filter-btn active" onclick="setCoFilter('all')" id="coFilterAll" style="padding:6px 14px;border-radius:20px;border:1.5px solid #e0ddd5;background:#1a1a1a;color:#fff;font-family:Oswald,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">All</button>
+    <button class="co-filter-btn" onclick="setCoFilter('callout')" id="coFilterCallout" style="padding:6px 14px;border-radius:20px;border:1.5px solid #e0ddd5;background:#fff;color:#888;font-family:Oswald,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Call Outs</button>
+    <button class="co-filter-btn" onclick="setCoFilter('noshow')" id="coFilterNoshow" style="padding:6px 14px;border-radius:20px;border:1.5px solid #e0ddd5;background:#fff;color:#888;font-family:Oswald,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">No Shows</button>
+    <button class="co-filter-btn" onclick="setCoFilter('repeat')" id="coFilterRepeat" style="padding:6px 14px;border-radius:20px;border:1.5px solid #e0ddd5;background:#fff;color:#888;font-family:Oswald,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">🚨 Repeat (3+)</button>
+  </div>
+
+  <!-- Log list -->
+  <div id="calloutList"></div>
 </div>
 </body></html>
