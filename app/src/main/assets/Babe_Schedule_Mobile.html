@@ -2,12 +2,12 @@
 <html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Babe's — Daily Schedule</title>
+<title>Manager's Suite — Schedule</title>
 
 <!-- Makes "Add to Home Screen" open full-screen without browser address bar -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Babe's Schedule">
+<meta name="apple-mobile-web-app-title" content="Schedule">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#2B2622">
 
@@ -23,8 +23,8 @@
     --paper-dark:#F1EADC;
     --ink:#2B2622;
     --ink-soft:#6B6258;
-    --rust:#B5482A;
-    --rust-dark:#8E3A20;
+    --rust:#1F4E79;
+    --rust-dark:#163A5C;
     --am-blue:#3D6B8C;
     --am-blue-light:#DCE9EF;
     --pm-plum:#4A3B5C;
@@ -1424,7 +1424,7 @@
 <div class="ticket-header">
   <div class="ticket-top-row">
     <div>
-      <div class="brand">Babe's</div>
+      <div class="brand">Schedule</div>
     </div>
     <div class="week-nav">
       <button class="week-nav-arrow" onclick="goToPreviousWeek()">‹</button>
@@ -3268,7 +3268,7 @@ function printCellText(v){
 function buildPrintTable(){
   const weekLabel = document.getElementById("weekPill").textContent;
   const grandTotal = totalScheduledHours();
-  let html = `<div class="ph-title">Babe's Chicken Dinner House — Daily Schedule</div>`;
+  let html = `<div class="ph-title">Manager's Suite — Daily Schedule</div>`;
   html += `<div class="ph-sub">Week of ${weekLabel} &nbsp;·&nbsp; Front of House &nbsp;·&nbsp; <b>Total scheduled hours: ${grandTotal}</b></div>`;
   html += `<table class="print-table"><thead><tr><th colspan="2">Staff</th>`;
   DAYS.forEach(d=>{ html += `<th>${d.dow} ${d.date}</th>`; });
