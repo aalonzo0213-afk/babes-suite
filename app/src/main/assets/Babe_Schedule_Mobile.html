@@ -1416,6 +1416,32 @@
       font-size:7px;
       color:#555;
     }
+
+    /* ---------- Paper sheet (locked paper format) ---------- */
+    .paper-sheet{ font-family:'Inter', Arial, sans-serif; color:#000; }
+    .paper-header{ display:flex; justify-content:space-between; align-items:baseline; font-weight:700; font-size:12.5px; margin:0 2px 5px; }
+    table.paper-grid{ width:100%; border-collapse:collapse; table-layout:fixed; }
+    table.paper-grid th, table.paper-grid td{ border:1px solid #000; }
+    table.paper-grid th{ font-size:6.6px; line-height:1.15; padding:2px 1px; text-align:center; background:#fff !important; color:#000; }
+    table.paper-grid th.emp-corner{ text-align:left; vertical-align:bottom; padding-left:3px; font-size:7.5px; }
+    table.paper-grid th .dw{ font-weight:700; font-size:7.5px; display:block; }
+    table.paper-grid th .dn{ font-weight:400; font-size:5.8px; color:#333; display:block; }
+    table.paper-grid td.pname{ font-weight:700; font-size:7.6px; text-align:left; padding:0 3px; width:70px; background:#fff; }
+    table.paper-grid td.pcell{
+      position:relative; height:22px; padding:0;
+      background: linear-gradient(to top right, #fff calc(50% - 0.5px), #777 calc(50% - 0.5px), #777 calc(50% + 0.5px), #fff calc(50% + 0.5px));
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    }
+    .pslot{ position:absolute; font-size:6.6px; font-weight:700; white-space:nowrap; display:inline-flex; align-items:center; gap:1.5px; transform:translate(-50%,-50%); }
+    .pslot.am{ left:30%; top:32%; }
+    .pslot.pm{ left:70%; top:80%; }
+    .cbadge{ display:inline-flex; align-items:center; justify-content:center; width:7.5px; height:7.5px; border:0.9px solid #000; border-radius:50%; font-size:5px; font-weight:700; line-height:1; flex:0 0 auto; }
+    .paper-subtitle{ font-weight:700; font-size:9.5px; margin:7px 2px 2px; letter-spacing:0.03em; }
+    table.paper-mini{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:6.6px; }
+    table.paper-mini th, table.paper-mini td{ border:1px solid #000; padding:1.8px 2px; text-align:center; background:#fff; color:#000; }
+    table.paper-mini th{ font-size:6.6px; font-weight:700; }
+    table.paper-mini td.rlabel, table.paper-mini th.rlabel{ text-align:left; font-weight:700; width:70px; padding-left:3px; }
+    .paper-legend{ font-size:6.8px; text-align:center; margin-top:6px; }
   }
 </style>
 </head>
@@ -1443,6 +1469,7 @@
   </div>
   <div class="more-menu" id="moreMenu" style="display: none;">
     <button class="view-toggle more-menu-item print-btn" onclick="toggleMoreMenu(); printSchedule();">🖨 Print</button>
+    <button class="view-toggle more-menu-item print-btn" onclick="toggleMoreMenu(); printPaperSheet();">🖨 Paper Sheet</button>
     <button class="view-toggle more-menu-item export-btn" onclick="toggleMoreMenu(); exportSchedule();">⬇ Export</button>
     <button class="view-toggle more-menu-item export-btn" onclick="toggleMoreMenu(); importSchedule();">⬆ Import</button>
     <button class="view-toggle more-menu-item timeoff-btn" onclick="toggleMoreMenu(); openTimeOffForm();">📅 Time Off</button>
@@ -3300,6 +3327,143 @@ function buildPrintTable(){
 
 function printSchedule(){
   buildPrintTable();
+  setTimeout(()=> window.print(), 80);
+}
+
+// ---------- Paper Sheet (locked paper format, portrait) ----------
+const PAPER_NAMES = {
+  "Macy Lombardo":"Macy","Wendy":"Wendy","Christina":"Christina","Damon Neros":"Damon",
+  "Monica Argueta":"Monica","Nayeli A. Perez":"Nayeli","Tori Lash":"Tori","Brooke Koomey":"Brooke",
+  "Ximena Ramirez":"Ximena","Miranda Sanchez":"Miranda","Lizelle Arevalo":"Liz","Lupita Padron":"Lupita",
+  "Jazlynn Gomez":"Jazlyn","Landry Mills":"Landry","Jacob Muñoz":"Jacob","Emily Koomey":"Emily",
+  "Jayla Felix":"Jayla","Isabella Escamilla":"Bella","Cynthia Moreno":"Cynthia","Olivia Leonard":"Olivia",
+  "Ella Ward":"Ella","Morgan Mills":"Morgan","Parker Morris":"Parker","Peyton Morris":"Peyton",
+  "Andrea Argueta":"Andrea","Payton Casey":"Payton C.","Adam Hantouli":"Adam","Bianca Gomez":"Bianca",
+  "Jaxon":"Jaxon","Melanie":"Melanie"
+};
+function paperName(name){ return PAPER_NAMES[name] || name.split(" ")[0]; }
+
+const PAPER_DAY_FULL = ["Thursday","Friday","Saturday","Sunday","Monday","Tuesday","Wednesday"];
+const PAPER_DAY_ES = ["Jueves","Viernes","S\u00e1bado","Domingo","Lunes","Martes","Mi\u00e9rcoles"];
+const PAPER_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+// Shorthand: drop ":00", keep other minutes; Open -> "op", AM Close -> "cl",
+// PM Close A/B/C -> circled badge; "Togo Only" -> "Togo"; "1-V" stays.
+function paperShiftCode(v, period){
+  if(v === "1-V") return { text:"1-V", badge:null };
+  if(v.includes("Togo")) return { text:"Togo", badge:null };
+  const m = v.match(/^(\d{1,2}):(\d{2})/);
+  let t = m ? (m[2] === "00" ? m[1] : m[1] + m[2]) : v;
+  const closeMatch = v.match(/Close\s*([ABC])\b/);
+  if(v.includes("Open")) return { text: t + " op", badge:null };
+  if(closeMatch && period === "pm") return { text: t, badge: closeMatch[1] };
+  if(v.includes("Close")) return { text: t + " cl", badge:null };
+  return { text: t, badge:null };
+}
+
+// Cell value logic (locked): R/O -> "off"; "No" matching snapshot -> "\u2014";
+// "No" differing from snapshot -> blank; "Yes" -> blank; real shift -> shorthand.
+function paperCellContent(v, snapV, period){
+  if(v === "R/O" || v === "OFF") return { text:"off", badge:null };
+  if(v === "No") return { text: (snapV === "No" ? "\u2014" : ""), badge:null };
+  if(v === "Yes" || v === "" || v === undefined) return { text:"", badge:null };
+  return paperShiftCode(v, period);
+}
+
+function paperSlotHtml(cls, content){
+  if(!content.text && !content.badge) return "";
+  const badge = content.badge ? `<span class="cbadge">${content.badge}</span>` : "";
+  return `<span class="pslot ${cls}">${content.text}${badge}</span>`;
+}
+
+function buildPaperSheet(){
+  const start = new Date(weekStartDate + "T00:00:00");
+  const end = new Date(start); end.setDate(start.getDate() + 6);
+  const weekOf = `${PAPER_MONTHS[start.getMonth()]} ${start.getDate()}`;
+  const thru = `${PAPER_MONTHS[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+
+  let html = `<div class="paper-sheet">`;
+  html += `<div class="paper-header"><span>Schedule for: Servers</span><span>Week of: ${weekOf}</span><span>Thru: ${thru}</span></div>`;
+
+  // Main grid
+  html += `<table class="paper-grid"><thead><tr><th class="emp-corner">Employee</th>`;
+  DAYS.forEach((d,i)=>{
+    html += `<th><span class="dw">${d.dow} ${d.date.split("/")[1]}</span><span class="dn">${PAPER_DAY_FULL[i]}</span><span class="dn">${PAPER_DAY_ES[i]}</span></th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  Object.keys(staff).forEach(name=>{
+    html += `<tr><td class="pname">${paperName(name)}</td>`;
+    for(let i=0;i<7;i++){
+      const snap = DEFAULT_STAFF_SNAPSHOT[name] || {am:["No","No","No","No","No","No","No"],pm:["No","No","No","No","No","No","No"]};
+      const amC = paperCellContent(staff[name].am[i], snap.am[i], "am");
+      const pmC = paperCellContent(staff[name].pm[i], snap.pm[i], "pm");
+      html += `<td class="pcell">${paperSlotHtml("am", amC)}${paperSlotHtml("pm", pmC)}</td>`;
+    }
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // Key Roles
+  const roleRows = [
+    { label:"AM Open",    test:(rec,i)=> rec.am[i] && rec.am[i].includes("Open") },
+    { label:"AM Close",   test:(rec,i)=> rec.am[i] && rec.am[i].includes("Close") },
+    { label:"PM Open",    test:(rec,i)=> rec.pm[i] && rec.pm[i].includes("Open") },
+    { label:"PM Close A", test:(rec,i)=> rec.pm[i] && /Close\s*A\b/.test(rec.pm[i]) },
+    { label:"PM Close B", test:(rec,i)=> rec.pm[i] && /Close\s*B\b/.test(rec.pm[i]) },
+    { label:"PM Close C", test:(rec,i)=> rec.pm[i] && /Close\s*C\b/.test(rec.pm[i]) },
+  ];
+  html += `<div class="paper-subtitle">KEY ROLES</div>`;
+  html += `<table class="paper-mini"><thead><tr><th class="rlabel"></th>`;
+  DAYS.forEach(d=>{ html += `<th>${d.dow}</th>`; });
+  html += `</tr></thead><tbody>`;
+  roleRows.forEach(r=>{
+    html += `<tr><td class="rlabel">${r.label}</td>`;
+    for(let i=0;i<7;i++){
+      const names = Object.keys(staff).filter(n=> r.test(staff[n], i)).map(paperName);
+      html += `<td>${names.length ? names.join(", ") : "\u2014"}</td>`;
+    }
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // Staff Count
+  html += `<div class="paper-subtitle">STAFF COUNT</div>`;
+  html += `<table class="paper-mini"><tbody>`;
+  html += `<tr><td class="rlabel"># Working AM</td>`;
+  for(let i=0;i<7;i++){
+    const c = Object.keys(staff).filter(n=> isRealAM(staff[n].am[i])).length;
+    html += `<td><b>${c}</b></td>`;
+  }
+  html += `</tr><tr><td class="rlabel"># Working PM</td>`;
+  for(let i=0;i<7;i++){
+    const c = Object.keys(staff).filter(n=> isRealPM(staff[n].pm[i])).length;
+    html += `<td><b>${c}</b></td>`;
+  }
+  html += `</tr></tbody></table>`;
+
+  html += `<div class="paper-legend">OFF = Means Request Granted &nbsp;&nbsp; BLANK = Means Not Scheduled &nbsp;&nbsp; \u2014 = Means Permanent Day OFF &nbsp;&nbsp; circled letter = Close A/B/C station</div>`;
+  html += `</div>`;
+
+  document.getElementById("printSheet").innerHTML = html;
+}
+
+function printPaperSheet(){
+  buildPaperSheet();
+  // Existing print flow is landscape; override to portrait letter just for this print
+  let st = document.getElementById("paperPageStyle");
+  if(!st){
+    st = document.createElement("style");
+    st.id = "paperPageStyle";
+    document.head.appendChild(st);
+  }
+  st.textContent = "@media print{ @page{ size: letter portrait; margin: 0.28in; } }";
+  const cleanup = ()=>{
+    const el = document.getElementById("paperPageStyle");
+    if(el) el.remove();
+    window.removeEventListener("afterprint", cleanup);
+  };
+  window.addEventListener("afterprint", cleanup);
   setTimeout(()=> window.print(), 80);
 }
 
