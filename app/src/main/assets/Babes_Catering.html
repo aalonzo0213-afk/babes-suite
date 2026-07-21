@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manager's Suite — Catering</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Catering">
+<meta name="theme-color" content="#1F4E79">
+<style>
+  :root{
+    --bg: #f6f3ec;
+    --panel: #ffffff;
+    --ink: #2b2a26;
+    --ink-soft: #6b6a63;
+    --line: #ddd8cb;
+    --accent: #1F4E79;
+    --accent-bright: #2E6DA4;
+    --accent-pale: #E4EEF6;
+    --green: #5d8a47;
+    --green-pale: #eaf3e2;
+    --red: #b5483a;
+    --red-pale: #fbe9e6;
+    --locked-bg: #f0eee6;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding-bottom: 60px;
+  }
+  header{
+    background: var(--accent);
+    color: #fff;
+    padding: 14px 16px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: var(--shadow);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  header h1{ margin: 0 0 2px; font-size: 1.25rem; font-weight: 700; }
+  header .sub{ font-size:0.78rem; color:#dbe9f5; text-transform:uppercase; letter-spacing:0.4px; }
+  .header-btn{
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.4);
+    color:#fff;
+    font-size:0.72rem;
+    padding:7px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    font-family:inherit;
+    white-space:nowrap;
+  }
+  .header-btn:active{ background: rgba(255,255,255,0.3); }
+
+  main{ padding: 14px 12px 30px; }
+
+  .section{
+    background: var(--panel);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 14px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .section-head{
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--accent);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .section-body{ padding: 12px; }
+
+  .add-btn{
+    width:100%;
+    background: var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:12px;
+    font-size:0.9rem;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+    margin-bottom:14px;
+  }
+  .add-btn:active{ background: var(--accent-bright); }
+
+  .empty-hint{
+    text-align:center;
+    color: var(--ink-soft);
+    font-size:0.85rem;
+    padding: 20px 10px;
+  }
+
+  /* Event card */
+  .event-card{
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px 14px;
+    margin-bottom: 12px;
+    background: #fcfbf8;
+  }
+  .event-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+  }
+  .event-title{ font-weight:700; font-size:1rem; }
+  .event-meta{ font-size:0.78rem; color: var(--ink-soft); margin-top:2px; }
+  .delete-btn{
+    background: var(--red-pale);
+    color: var(--red);
+    border:1px solid var(--red);
+    border-radius:6px;
+    font-size:0.68rem;
+    padding:4px 8px;
+    cursor:pointer;
+    font-family:inherit;
+    white-space:nowrap;
+  }
+
+  .field-row{ margin-top:8px; }
+  .field-row label{
+    display:block;
+    font-size:0.68rem;
+    text-transform:uppercase;
+    color: var(--ink-soft);
+    font-weight:700;
+    margin-bottom:3px;
+  }
+  .field-row input, .field-row textarea{
+    width:100%;
+    padding:7px 9px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:0.86rem;
+    font-family:inherit;
+    background:#fff;
+  }
+  .field-row textarea{ resize:vertical; min-height:44px; }
+  .field-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+
+  .subhead{
+    font-size:0.74rem;
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+    color: var(--ink-soft);
+    font-weight:700;
+    margin: 14px 0 6px;
+  }
+
+  .chip-row{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    background: var(--accent-pale);
+    color: var(--accent);
+    border: 1px solid var(--accent-bright);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size:0.78rem;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .chip.fav::before{ content:"★ "; }
+  .chip.added{
+    background: var(--accent);
+    color:#fff;
+  }
+  .show-more-btn{
+    background:none;
+    border:1px dashed var(--line);
+    color: var(--ink-soft);
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:0.76rem;
+    cursor:pointer;
+    font-family:inherit;
+  }
+
+  .assigned-count{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background: var(--green-pale);
+    border:1px solid var(--green);
+    border-radius:8px;
+    padding:6px 10px;
+    margin: 8px 0;
+    font-size:0.8rem;
+    font-weight:700;
+    color: var(--green);
+  }
+  .assigned-count.short{ background: var(--red-pale); border-color: var(--red); color: var(--red); }
+
+  .assigned-row{
+    display:grid;
+    grid-template-columns: 1.4fr 0.7fr 1fr 22px;
+    gap:6px;
+    align-items:center;
+    padding:4px 0;
+  }
+  .assigned-row.head{
+    font-size:0.68rem;
+    text-transform:uppercase;
+    color: var(--ink-soft);
+    font-weight:700;
+  }
+  .assigned-row input{ width:100%; padding:5px 7px; border:1px solid var(--line); border-radius:6px; font-size:0.82rem; font-family:inherit; }
+  .assigned-row .share{
+    font-family:'Courier New', monospace;
+    font-size:0.76rem;
+    background: var(--locked-bg);
+    border-radius:6px;
+    padding:5px 6px;
+    text-align:right;
+    color: var(--ink-soft);
+  }
+  .assigned-row .remove-btn{
+    background:none; border:none; color:var(--red); font-size:1.1rem; line-height:1; cursor:pointer; padding:0;
+  }
+
+  .grat-row{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:6px; }
+
+  .foh-btn{
+    width:100%;
+    margin-top:12px;
+    background: #fff;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    border-radius:8px;
+    padding:9px;
+    font-size:0.8rem;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .foh-btn:active{ background: var(--accent-pale); }
+
+  .foh-result{
+    margin-top:8px;
+    font-size:0.8rem;
+    border-radius:8px;
+    padding:8px 10px;
+  }
+  .foh-result.clear{ background: var(--green-pale); border:1px solid var(--green); color: var(--green); }
+  .foh-result.conflict{ background: var(--red-pale); border:1px solid var(--red); color: var(--red); }
+  .foh-result.unknown{ background: var(--locked-bg); border:1px solid var(--line); color: var(--ink-soft); }
+  .foh-conflict-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    padding:4px 0;
+    border-top: 1px dashed rgba(0,0,0,0.08);
+  }
+  .foh-conflict-item:first-of-type{ border-top:none; }
+  .ack-btn{
+    font-size:0.68rem;
+    background:#fff;
+    border:1px solid var(--red);
+    color:var(--red);
+    border-radius:6px;
+    padding:3px 7px;
+    cursor:pointer;
+    font-family:inherit;
+    white-space:nowrap;
+  }
+  .ack-btn.acked{ background: var(--red); color:#fff; }
+
+  /* Settings / eligible pool panel */
+  .settings-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:100;
+    display:none;
+  }
+  .settings-overlay.show{ display:block; }
+  .settings-panel{
+    position:fixed; top:0; right:0; bottom:0; width:min(340px, 88vw);
+    background: var(--panel);
+    z-index:101;
+    box-shadow: -2px 0 12px rgba(0,0,0,0.15);
+    display:flex; flex-direction:column;
+    transform: translateX(100%);
+    transition: transform 0.18s ease;
+  }
+  .settings-overlay.show .settings-panel{ transform: translateX(0); }
+  .settings-head{
+    background: var(--accent); color:#fff; padding:14px; font-weight:700; font-size:0.95rem;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .settings-head button{
+    background:none; border:none; color:#fff; font-size:1.3rem; cursor:pointer; line-height:1;
+  }
+  .settings-body{ overflow-y:auto; padding: 8px 14px; flex:1; }
+  .settings-hint{ font-size:0.76rem; color:var(--ink-soft); padding: 6px 0 12px; }
+  .staff-toggle-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 0; border-bottom: 1px solid var(--line);
+    gap:8px;
+  }
+  .staff-toggle-row .name{ font-size:0.86rem; flex:1; }
+  .toggle-btns{ display:flex; gap:6px; }
+  .toggle-mini{
+    font-size:0.68rem;
+    padding:5px 9px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:#fff;
+    color: var(--ink-soft);
+    cursor:pointer;
+    font-family:inherit;
+    white-space:nowrap;
+  }
+  .toggle-mini.on{ background: var(--accent); border-color: var(--accent); color:#fff; }
+  .toggle-mini.fav-on{ background: #D9A441; border-color:#D9A441; color:#fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Catering</h1>
+    <div class="sub">Front of House</div>
+  </div>
+  <button class="header-btn" id="openSettingsBtn">⚙ Eligible Staff</button>
+</header>
+
+<main>
+  <button class="add-btn" id="newEventBtn">+ New Catering Event</button>
+  <div id="eventsList"></div>
+</main>
+
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-panel">
+    <div class="settings-head">
+      <span>Catering-Eligible Staff</span>
+      <button id="closeSettingsBtn">×</button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-hint">Toggle "Eligible" for anyone who can work catering. Star your most-used people so they show up as quick-picks when assigning an event.</div>
+      <div id="staffToggleList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  const CANONICAL_STAFF = [
+    "Macy Lombardo","Wendy","Christina","Damon Neros","Monica Argueta",
+    "Nayeli A. Perez","Tori Lash","Brooke Koomey","Ximena Ramirez","Miranda Sanchez",
+    "Lizelle Arevalo","Lupita Padron","Jazlynn Gomez","Landry Mills","Jacob Muñoz",
+    "Emily Koomey","Jayla Felix","Isabella Escamilla","Cynthia Moreno","Olivia Leonard",
+    "Ella Ward","Morgan Mills","Parker Morris","Peyton Morris","Andrea Argueta",
+    "Payton Casey","Adam Hantouli","Bianca Gomez","Jaxon","Melanie"
+  ];
+
+  const POOL_KEY = "catering-eligible-pool";
+  const EVENTS_KEY = "catering-events";
+
+  function num(v){ const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function fmt(n){ n = isFinite(n) ? n : 0; return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function uid(){ return 'ev_' + Date.now() + '_' + Math.floor(Math.random()*10000); }
+  function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // ---------- eligible pool ----------
+  function loadPool(){
+    try{
+      const raw = localStorage.getItem(POOL_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    const pool = {};
+    CANONICAL_STAFF.forEach(n=> pool[n] = {eligible:false, favorite:false});
+    return pool;
+  }
+  function savePool(pool){
+    try{ localStorage.setItem(POOL_KEY, JSON.stringify(pool)); }catch(e){}
+  }
+  let pool = loadPool();
+  // Make sure any staff added to CANONICAL_STAFF later still show up
+  CANONICAL_STAFF.forEach(n=>{ if(!pool[n]) pool[n] = {eligible:false, favorite:false}; });
+
+  function eligibleNames(){
+    return CANONICAL_STAFF.filter(n=> pool[n] && pool[n].eligible);
+  }
+  function favoriteNames(){
+    return CANONICAL_STAFF.filter(n=> pool[n] && pool[n].eligible && pool[n].favorite);
+  }
+
+  function renderStaffToggleList(){
+    let html = '';
+    CANONICAL_STAFF.forEach(name=>{
+      const p = pool[name];
+      html += `<div class="staff-toggle-row">
+        <div class="name">${escapeHtml(name)}</div>
+        <div class="toggle-btns">
+          <button type="button" class="toggle-mini ${p.eligible?'on':''}" data-action="eligible" data-name="${escapeHtml(name)}">${p.eligible?'✓ Eligible':'Eligible'}</button>
+          <button type="button" class="toggle-mini ${p.favorite?'fav-on':''}" data-action="favorite" data-name="${escapeHtml(name)}" ${p.eligible?'':'disabled style="opacity:.35;"'}>★</button>
+        </div>
+      </div>`;
+    });
+    document.getElementById('staffToggleList').innerHTML = html;
+  }
+
+  document.getElementById('staffToggleList').addEventListener('click', function(e){
+    const btn = e.target.closest('.toggle-mini');
+    if(!btn || btn.disabled) return;
+    const name = btn.dataset.name;
+    const action = btn.dataset.action;
+    if(action === 'eligible'){
+      pool[name].eligible = !pool[name].eligible;
+      if(!pool[name].eligible) pool[name].favorite = false;
+    } else if(action === 'favorite'){
+      pool[name].favorite = !pool[name].favorite;
+    }
+    savePool(pool);
+    renderStaffToggleList();
+    renderEvents(); // chip lists depend on pool
+  });
+
+  document.getElementById('openSettingsBtn').addEventListener('click', function(){
+    renderStaffToggleList();
+    document.getElementById('settingsOverlay').classList.add('show');
+  });
+  document.getElementById('closeSettingsBtn').addEventListener('click', function(){
+    document.getElementById('settingsOverlay').classList.remove('show');
+  });
+  document.getElementById('settingsOverlay').addEventListener('click', function(e){
+    if(e.target.id === 'settingsOverlay') this.classList.remove('show');
+  });
+
+  // ---------- events ----------
+  function loadEvents(){
+    try{
+      const raw = localStorage.getItem(EVENTS_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return [];
+  }
+  function saveEvents(){
+    try{ localStorage.setItem(EVENTS_KEY, JSON.stringify(events)); }catch(e){}
+  }
+  let events = loadEvents();
+  let expandedChipLists = {}; // eventId -> bool, whether "show all eligible" is expanded
+
+  function newEvent(){
+    events.unshift({
+      id: uid(),
+      name: '',
+      date: '',
+      time: '',
+      location: '',
+      needed: '',
+      notes: '',
+      assigned: [], // {name, hours}
+      gratuity: '',
+      fohChecked: false,
+      fohConflicts: [], // {name, day, period, shift}
+      fohAcked: {} // name -> true
+    });
+    saveEvents();
+    renderEvents();
+  }
+  document.getElementById('newEventBtn').addEventListener('click', newEvent);
+
+  function findEvent(id){ return events.find(e=> e.id === id); }
+
+  // ---------- FOH cross-check ----------
+  function weekStartFor(dateIso){
+    const d = new Date(dateIso + 'T00:00:00');
+    const day = d.getDay(); // 0=Sun..4=Thu..6=Sat
+    const diff = (day - 4 + 7) % 7; // days since most recent Thursday
+    d.setDate(d.getDate() - diff);
+    return d.toISOString().slice(0,10);
+  }
+  function dayIndexInWeek(dateIso, weekStartIso){
+    const d1 = new Date(dateIso + 'T00:00:00');
+    const d0 = new Date(weekStartIso + 'T00:00:00');
+    return Math.round((d1 - d0) / 86400000);
+  }
+  function isRealShift(val){
+    if(!val) return false;
+    return val !== 'No' && val !== 'Yes' && val !== 'R/O';
+  }
+
+  function runFohCheck(ev){
+    if(!ev.date || ev.assigned.length === 0){
+      ev.fohChecked = true;
+      ev.fohConflicts = [];
+      ev.fohStatus = 'no-date';
+      saveEvents(); renderEvents();
+      return;
+    }
+    const weekStart = weekStartFor(ev.date);
+    let raw = null;
+    try{ raw = localStorage.getItem('babes-schedule-data-' + weekStart); }catch(e){}
+    if(!raw){
+      ev.fohChecked = true;
+      ev.fohConflicts = [];
+      ev.fohStatus = 'no-data';
+      saveEvents(); renderEvents();
+      return;
+    }
+    const weekStaff = JSON.parse(raw);
+    const di = dayIndexInWeek(ev.date, weekStart);
+    const conflicts = [];
+    ev.assigned.forEach(person=>{
+      const rec = weekStaff[person.name];
+      if(!rec || di < 0 || di > 6) return;
+      if(isRealShift(rec.am[di])) conflicts.push({name:person.name, period:'AM', shift:rec.am[di]});
+      if(isRealShift(rec.pm[di])) conflicts.push({name:person.name, period:'PM', shift:rec.pm[di]});
+    });
+    ev.fohChecked = true;
+    ev.fohStatus = 'checked';
+    ev.fohConflicts = conflicts;
+    saveEvents(); renderEvents();
+  }
+
+  // ---------- gratuity split ----------
+  function computeShares(ev){
+    const totalHours = ev.assigned.reduce((s,p)=> s + num(p.hours), 0);
+    const grat = num(ev.gratuity);
+    return ev.assigned.map(p=>{
+      const share = totalHours > 0 ? (num(p.hours)/totalHours) * grat : 0;
+      return {name:p.name, hours:p.hours, share};
+    });
+  }
+
+  // ---------- render ----------
+  function renderEvents(){
+    const listEl = document.getElementById('eventsList');
+    if(events.length === 0){
+      listEl.innerHTML = '<div class="empty-hint">No catering events yet. Tap "+ New Catering Event" to add one.</div>';
+      return;
+    }
+    const elig = eligibleNames();
+    const favs = favoriteNames();
+
+    let html = '';
+    events.forEach(ev=>{
+      const assignedNames = new Set(ev.assigned.map(p=>p.name));
+      const needed = num(ev.needed);
+      const assignedCount = ev.assigned.length;
+      const shortOf = needed > 0 && assignedCount < needed;
+
+      // Chip pool: favorites always shown, rest shown only if expanded
+      const showAll = !!expandedChipLists[ev.id];
+      const chipNames = showAll ? elig : favs;
+      const remainingCount = elig.filter(n=> !favs.includes(n)).length;
+
+      let chipsHtml = '';
+      if(elig.length === 0){
+        chipsHtml = '<div class="empty-hint" style="padding:8px 0;">No catering-eligible staff yet — tap ⚙ Eligible Staff above to add some.</div>';
+      } else {
+        chipNames.forEach(n=>{
+          const isFav = favs.includes(n);
+          const isAdded = assignedNames.has(n);
+          chipsHtml += `<button type="button" class="chip ${isFav?'fav':''} ${isAdded?'added':''}" data-event="${ev.id}" data-name="${escapeHtml(n)}">${escapeHtml(n)}</button>`;
+        });
+        if(!showAll && remainingCount > 0){
+          chipsHtml += `<button type="button" class="show-more-btn" data-expand="${ev.id}">+ ${remainingCount} more</button>`;
+        }
+      }
+
+      const shares = computeShares(ev);
+      let assignedRowsHtml = '';
+      if(ev.assigned.length){
+        assignedRowsHtml += `<div class="assigned-row head"><div>Name</div><div>Hours</div><div>Grat. Share</div><div></div></div>`;
+        ev.assigned.forEach((p, idx)=>{
+          const share = shares[idx] ? shares[idx].share : 0;
+          assignedRowsHtml += `<div class="assigned-row">
+            <div style="font-size:0.84rem;">${escapeHtml(p.name)}</div>
+            <input type="number" step="0.1" placeholder="0" value="${p.hours}" data-event="${ev.id}" data-idx="${idx}" class="hours-input">
+            <div class="share">${fmt(share)}</div>
+            <button type="button" class="remove-btn" data-event="${ev.id}" data-idx="${idx}" title="Remove">×</button>
+          </div>`;
+        });
+      }
+
+      let fohHtml = '';
+      if(ev.fohChecked){
+        if(ev.fohStatus === 'no-date'){
+          fohHtml = `<div class="foh-result unknown">Add a date and assign staff before checking the FOH schedule.</div>`;
+        } else if(ev.fohStatus === 'no-data'){
+          fohHtml = `<div class="foh-result unknown">No FOH schedule data found for that week yet. Open Live Schedule at least once for that week, then check again.</div>`;
+        } else if(ev.fohConflicts.length === 0){
+          fohHtml = `<div class="foh-result clear">✓ No conflicts — nobody assigned here is also on the FOH schedule that day.</div>`;
+        } else {
+          let itemsHtml = '';
+          ev.fohConflicts.forEach(c=>{
+            const key = c.name + '|' + c.period;
+            const acked = !!ev.fohAcked[key];
+            itemsHtml += `<div class="foh-conflict-item">
+              <span>${escapeHtml(c.name)} — ${c.period} (${escapeHtml(c.shift)})</span>
+              <button type="button" class="ack-btn ${acked?'acked':''}" data-event="${ev.id}" data-key="${escapeHtml(key)}">${acked?'✓ Confirmed':'Confirm anyway'}</button>
+            </div>`;
+          });
+          fohHtml = `<div class="foh-result conflict"><strong>⚠ ${ev.fohConflicts.length} conflict(s) found</strong> — also scheduled on the FOH board that day:${itemsHtml}</div>`;
+        }
+      }
+
+      html += `<div class="event-card" data-event-card="${ev.id}">
+        <div class="event-head">
+          <div>
+            <div class="event-title">${escapeHtml(ev.name) || 'Untitled Event'}</div>
+            <div class="event-meta">${escapeHtml(ev.date)||'No date'} ${ev.time?('· '+escapeHtml(ev.time)):''} ${ev.location?('· '+escapeHtml(ev.location)):''}</div>
+          </div>
+          <button type="button" class="delete-btn" data-delete="${ev.id}">Delete</button>
+        </div>
+
+        <div class="field-row">
+          <label>Event Name</label>
+          <input type="text" value="${escapeHtml(ev.name)}" data-field="name" data-event="${ev.id}" placeholder="e.g. Smith Family Reunion">
+        </div>
+        <div class="field-grid">
+          <div class="field-row">
+            <label>Date</label>
+            <input type="date" value="${escapeHtml(ev.date)}" data-field="date" data-event="${ev.id}">
+          </div>
+          <div class="field-row">
+            <label>Time</label>
+            <input type="time" value="${escapeHtml(ev.time)}" data-field="time" data-event="${ev.id}">
+          </div>
+        </div>
+        <div class="field-grid">
+          <div class="field-row">
+            <label>Location</label>
+            <input type="text" value="${escapeHtml(ev.location)}" data-field="location" data-event="${ev.id}" placeholder="Venue / address">
+          </div>
+          <div class="field-row">
+            <label>Staff Needed</label>
+            <input type="number" value="${escapeHtml(ev.needed)}" data-field="needed" data-event="${ev.id}" placeholder="0">
+          </div>
+        </div>
+        <div class="field-row">
+          <label>Notes</label>
+          <textarea data-field="notes" data-event="${ev.id}" placeholder="Setup time, menu, contact person, etc.">${escapeHtml(ev.notes)}</textarea>
+        </div>
+
+        <div class="subhead">Assign Staff</div>
+        <div class="chip-row">${chipsHtml}</div>
+
+        <div class="assigned-count ${shortOf?'short':''}">
+          <span>${assignedCount} assigned${needed>0 ? (' / ' + needed + ' needed') : ''}</span>
+          ${shortOf ? '<span>Need ' + (needed-assignedCount) + ' more</span>' : ''}
+        </div>
+
+        ${assignedRowsHtml}
+
+        <div class="subhead">Gratuity Split (by hours)</div>
+        <div class="grat-row">
+          <div class="field-row" style="margin-top:0;">
+            <label>Total Gratuity</label>
+            <input type="number" step="0.01" value="${escapeHtml(ev.gratuity)}" data-field="gratuity" data-event="${ev.id}" placeholder="0.00">
+          </div>
+        </div>
+
+        <button type="button" class="foh-btn" data-check="${ev.id}">Check FOH Schedule for Conflicts</button>
+        ${fohHtml}
+      </div>`;
+    });
+    listEl.innerHTML = html;
+  }
+
+  // ---------- event delegation ----------
+  document.getElementById('eventsList').addEventListener('click', function(e){
+    // delete event
+    const delBtn = e.target.closest('[data-delete]');
+    if(delBtn){
+      events = events.filter(ev=> ev.id !== delBtn.dataset.delete);
+      saveEvents(); renderEvents(); return;
+    }
+    // expand chip list
+    const expandBtn = e.target.closest('[data-expand]');
+    if(expandBtn){
+      expandedChipLists[expandBtn.dataset.expand] = true;
+      renderEvents(); return;
+    }
+    // chip toggle (add/remove person)
+    const chip = e.target.closest('.chip');
+    if(chip){
+      const ev = findEvent(chip.dataset.event);
+      const name = chip.dataset.name;
+      const idx = ev.assigned.findIndex(p=> p.name === name);
+      if(idx >= 0) ev.assigned.splice(idx,1);
+      else ev.assigned.push({name, hours:''});
+      ev.fohChecked = false;
+      saveEvents(); renderEvents(); return;
+    }
+    // remove assigned row
+    const removeBtn = e.target.closest('.remove-btn');
+    if(removeBtn){
+      const ev = findEvent(removeBtn.dataset.event);
+      ev.assigned.splice(parseInt(removeBtn.dataset.idx,10), 1);
+      ev.fohChecked = false;
+      saveEvents(); renderEvents(); return;
+    }
+    // run FOH check
+    const checkBtn = e.target.closest('[data-check]');
+    if(checkBtn){
+      const ev = findEvent(checkBtn.dataset.check);
+      runFohCheck(ev);
+      return;
+    }
+    // acknowledge conflict
+    const ackBtn = e.target.closest('.ack-btn');
+    if(ackBtn){
+      const ev = findEvent(ackBtn.dataset.event);
+      const key = ackBtn.dataset.key;
+      ev.fohAcked[key] = !ev.fohAcked[key];
+      saveEvents(); renderEvents(); return;
+    }
+  });
+
+  document.getElementById('eventsList').addEventListener('input', function(e){
+    const t = e.target;
+    if(t.dataset.field){
+      const ev = findEvent(t.dataset.event);
+      ev[t.dataset.field] = t.value;
+      if(t.dataset.field === 'date') ev.fohChecked = false;
+      saveEvents();
+      if(t.dataset.field === 'gratuity'){
+        // live-update shares without full re-render (keeps focus)
+        updateSharesInPlace(t.dataset.event);
+      }
+      return;
+    }
+    if(t.classList.contains('hours-input')){
+      const ev = findEvent(t.dataset.event);
+      ev.assigned[parseInt(t.dataset.idx,10)].hours = t.value;
+      saveEvents();
+      updateSharesInPlace(t.dataset.event);
+      return;
+    }
+  });
+
+  function updateSharesInPlace(eventId){
+    const ev = findEvent(eventId);
+    const shares = computeShares(ev);
+    const card = document.querySelector('[data-event-card="'+eventId+'"]');
+    if(!card) return;
+    const rows = card.querySelectorAll('.assigned-row:not(.head)');
+    rows.forEach((row, idx)=>{
+      const shareEl = row.querySelector('.share');
+      if(shareEl && shares[idx]) shareEl.textContent = fmt(shares[idx].share);
+    });
+  }
+
+  renderEvents();
+
+})();
+</script>
+</body>
+</html>
