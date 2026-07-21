@@ -1416,32 +1416,6 @@
       font-size:7px;
       color:#555;
     }
-
-    /* ---------- Paper sheet (locked paper format) ---------- */
-    .paper-sheet{ font-family:'Inter', Arial, sans-serif; color:#000; }
-    .paper-header{ display:flex; justify-content:space-between; align-items:baseline; font-weight:700; font-size:12.5px; margin:0 2px 5px; }
-    table.paper-grid{ width:100%; border-collapse:collapse; table-layout:fixed; }
-    table.paper-grid th, table.paper-grid td{ border:1px solid #000; }
-    table.paper-grid th{ font-size:6.6px; line-height:1.15; padding:2px 1px; text-align:center; background:#fff !important; color:#000; }
-    table.paper-grid th.emp-corner{ text-align:left; vertical-align:bottom; padding-left:3px; font-size:7.5px; }
-    table.paper-grid th .dw{ font-weight:700; font-size:7.5px; display:block; }
-    table.paper-grid th .dn{ font-weight:400; font-size:5.8px; color:#333; display:block; }
-    table.paper-grid td.pname{ font-weight:700; font-size:7.6px; text-align:left; padding:0 3px; width:70px; background:#fff; }
-    table.paper-grid td.pcell{
-      position:relative; height:22px; padding:0;
-      background: linear-gradient(to top right, #fff calc(50% - 0.5px), #777 calc(50% - 0.5px), #777 calc(50% + 0.5px), #fff calc(50% + 0.5px));
-      -webkit-print-color-adjust:exact; print-color-adjust:exact;
-    }
-    .pslot{ position:absolute; font-size:6.6px; font-weight:700; white-space:nowrap; display:inline-flex; align-items:center; gap:1.5px; transform:translate(-50%,-50%); }
-    .pslot.am{ left:30%; top:32%; }
-    .pslot.pm{ left:70%; top:80%; }
-    .cbadge{ display:inline-flex; align-items:center; justify-content:center; width:7.5px; height:7.5px; border:0.9px solid #000; border-radius:50%; font-size:5px; font-weight:700; line-height:1; flex:0 0 auto; }
-    .paper-subtitle{ font-weight:700; font-size:9.5px; margin:7px 2px 2px; letter-spacing:0.03em; }
-    table.paper-mini{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:6.6px; }
-    table.paper-mini th, table.paper-mini td{ border:1px solid #000; padding:1.8px 2px; text-align:center; background:#fff; color:#000; }
-    table.paper-mini th{ font-size:6.6px; font-weight:700; }
-    table.paper-mini td.rlabel, table.paper-mini th.rlabel{ text-align:left; font-weight:700; width:70px; padding-left:3px; }
-    .paper-legend{ font-size:6.8px; text-align:center; margin-top:6px; }
   }
 </style>
 </head>
@@ -1469,7 +1443,7 @@
   </div>
   <div class="more-menu" id="moreMenu" style="display: none;">
     <button class="view-toggle more-menu-item print-btn" onclick="toggleMoreMenu(); printSchedule();">🖨 Print</button>
-    <button class="view-toggle more-menu-item print-btn" onclick="toggleMoreMenu(); printPaperSheet();">🖨 Paper Sheet</button>
+    <button class="view-toggle more-menu-item print-btn" onclick="toggleMoreMenu(); openPaperView();">🖨 Paper Sheet</button>
     <button class="view-toggle more-menu-item export-btn" onclick="toggleMoreMenu(); exportSchedule();">⬇ Export</button>
     <button class="view-toggle more-menu-item export-btn" onclick="toggleMoreMenu(); importSchedule();">⬆ Import</button>
     <button class="view-toggle more-menu-item timeoff-btn" onclick="toggleMoreMenu(); openTimeOffForm();">📅 Time Off</button>
@@ -1759,6 +1733,19 @@
 <div class="save-toast" id="saveToast">Saved</div>
 
 <div id="printSheet"></div>
+
+<!-- On-screen Paper Sheet viewer (webview-safe fallback) -->
+<div id="paperView" style="display:none; position:fixed; inset:0; z-index:9999; background:#3a4a58; overflow:auto; -webkit-overflow-scrolling:touch;">
+  <div style="position:sticky; top:0; z-index:2; background:#1F4E79; padding:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <button onclick="paperTryPrint()" style="background:#2E6DA4; color:#fff; border:none; border-radius:8px; padding:8px 12px; font-weight:700;">🖨 Try Print</button>
+    <button onclick="paperSaveHtml()" style="background:#2E6DA4; color:#fff; border:none; border-radius:8px; padding:8px 12px; font-weight:700;">💾 Save HTML</button>
+    <span style="color:#cfe0ef; font-size:11px; flex:1;">Pinch/scroll to zoom · screenshot works too</span>
+    <button onclick="closePaperView()" style="background:#B5482A; color:#fff; border:none; border-radius:8px; padding:8px 12px; font-weight:700;">✕ Close</button>
+  </div>
+  <div style="padding:10px; overflow:auto;">
+    <div id="paperViewSheet" style="background:#fff; width:790px; min-width:790px; padding:16px; box-shadow:0 4px 18px rgba(0,0,0,0.4);"></div>
+  </div>
+</div>
 
 <div class="sheet-overlay" id="sheetOverlay">
   <div class="sheet">
@@ -3331,6 +3318,40 @@ function printSchedule(){
 }
 
 // ---------- Paper Sheet (locked paper format, portrait) ----------
+const PAPER_CSS = `
+.paper-sheet{ font-family:'Inter', Arial, sans-serif; color:#000; }
+.paper-header{ display:flex; justify-content:space-between; align-items:baseline; font-weight:700; font-size:12.5px; margin:0 2px 5px; }
+table.paper-grid{ width:100%; border-collapse:collapse; table-layout:fixed; }
+table.paper-grid th, table.paper-grid td{ border:1px solid #000; }
+table.paper-grid th{ font-size:6.6px; line-height:1.15; padding:2px 1px; text-align:center; background:#fff !important; color:#000; }
+table.paper-grid th.emp-corner{ text-align:left; vertical-align:bottom; padding-left:3px; font-size:7.5px; }
+table.paper-grid th .dw{ font-weight:700; font-size:7.5px; display:block; }
+table.paper-grid th .dn{ font-weight:400; font-size:5.8px; color:#333; display:block; }
+table.paper-grid td.pname{ font-weight:700; font-size:7.6px; text-align:left; padding:0 3px; width:70px; background:#fff; }
+table.paper-grid td.pcell{
+  position:relative; height:22px; padding:0;
+  background: linear-gradient(to top right, #fff calc(50% - 0.5px), #777 calc(50% - 0.5px), #777 calc(50% + 0.5px), #fff calc(50% + 0.5px));
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+.pslot{ position:absolute; font-size:6.6px; font-weight:700; white-space:nowrap; display:inline-flex; align-items:center; gap:1.5px; transform:translate(-50%,-50%); }
+.pslot.am{ left:30%; top:32%; }
+.pslot.pm{ left:70%; top:80%; }
+.cbadge{ display:inline-flex; align-items:center; justify-content:center; width:7.5px; height:7.5px; border:0.9px solid #000; border-radius:50%; font-size:5px; font-weight:700; line-height:1; flex:0 0 auto; }
+.paper-subtitle{ font-weight:700; font-size:9.5px; margin:7px 2px 2px; letter-spacing:0.03em; }
+table.paper-mini{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:6.6px; }
+table.paper-mini th, table.paper-mini td{ border:1px solid #000; padding:1.8px 2px; text-align:center; background:#fff; color:#000; }
+table.paper-mini th{ font-size:6.6px; font-weight:700; }
+table.paper-mini td.rlabel, table.paper-mini th.rlabel{ text-align:left; font-weight:700; width:70px; padding-left:3px; }
+.paper-legend{ font-size:6.8px; text-align:center; margin-top:6px; }
+`;
+// Inject paper CSS so it applies on screen AND in print
+(function(){
+  const st = document.createElement("style");
+  st.id = "paperSheetCss";
+  st.textContent = PAPER_CSS;
+  document.head.appendChild(st);
+})();
+
 const PAPER_NAMES = {
   "Macy Lombardo":"Macy","Wendy":"Wendy","Christina":"Christina","Damon Neros":"Damon",
   "Monica Argueta":"Monica","Nayeli A. Perez":"Nayeli","Tori Lash":"Tori","Brooke Koomey":"Brooke",
@@ -3377,6 +3398,56 @@ function paperSlotHtml(cls, content){
 }
 
 function buildPaperSheet(){
+  document.getElementById("printSheet").innerHTML = buildPaperSheetHtml();
+}
+
+function openPaperView(){
+  document.getElementById("paperViewSheet").innerHTML = buildPaperSheetHtml();
+  document.getElementById("paperView").style.display = "block";
+}
+function closePaperView(){
+  document.getElementById("paperView").style.display = "none";
+}
+
+function paperTryPrint(){
+  buildPaperSheet();
+  // Existing print flow is landscape; override to portrait letter just for this print
+  let st = document.getElementById("paperPageStyle");
+  if(!st){
+    st = document.createElement("style");
+    st.id = "paperPageStyle";
+    document.head.appendChild(st);
+  }
+  st.textContent = "@media print{ @page{ size: letter portrait; margin: 0.28in; } }";
+  const cleanup = ()=>{
+    const el = document.getElementById("paperPageStyle");
+    if(el) el.remove();
+    window.removeEventListener("afterprint", cleanup);
+  };
+  window.addEventListener("afterprint", cleanup);
+  setTimeout(()=> window.print(), 80);
+}
+
+function paperSaveHtml(){
+  try{
+    const doc = "<!DOCTYPE html><html><head><meta charset=\"utf-8\">"
+      + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+      + "<title>Schedule Paper Sheet " + weekStartDate + "</title>"
+      + "<style>body{margin:12px;background:#fff;} @page{size:letter portrait;margin:0.28in;} " + PAPER_CSS + "</style>"
+      + "</head><body>" + buildPaperSheetHtml() + "</body></html>";
+    const blob = new Blob([doc], {type:"text/html"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "Paper_Sheet_" + weekStartDate + ".html";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }catch(e){
+    alert("Couldn't save the file from inside the app. Take a screenshot of the sheet instead, or open the schedule in Chrome to use Save.");
+  }
+}
+
+function buildPaperSheetHtml(){
   const start = new Date(weekStartDate + "T00:00:00");
   const end = new Date(start); end.setDate(start.getDate() + 6);
   const weekOf = `${PAPER_MONTHS[start.getMonth()]} ${start.getDate()}`;
@@ -3444,28 +3515,9 @@ function buildPaperSheet(){
 
   html += `<div class="paper-legend">OFF = Means Request Granted &nbsp;&nbsp; BLANK = Means Not Scheduled &nbsp;&nbsp; \u2014 = Means Permanent Day OFF &nbsp;&nbsp; circled letter = Close A/B/C station</div>`;
   html += `</div>`;
-
-  document.getElementById("printSheet").innerHTML = html;
+  return html;
 }
 
-function printPaperSheet(){
-  buildPaperSheet();
-  // Existing print flow is landscape; override to portrait letter just for this print
-  let st = document.getElementById("paperPageStyle");
-  if(!st){
-    st = document.createElement("style");
-    st.id = "paperPageStyle";
-    document.head.appendChild(st);
-  }
-  st.textContent = "@media print{ @page{ size: letter portrait; margin: 0.28in; } }";
-  const cleanup = ()=>{
-    const el = document.getElementById("paperPageStyle");
-    if(el) el.remove();
-    window.removeEventListener("afterprint", cleanup);
-  };
-  window.addEventListener("afterprint", cleanup);
-  setTimeout(()=> window.print(), 80);
-}
 
 function buildStaffLiteral(){
   const lines = Object.keys(staff).map(name=>{
