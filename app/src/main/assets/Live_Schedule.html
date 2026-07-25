@@ -2,12 +2,12 @@
 <html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Babe's — Daily Schedule</title>
+<title>Manager's Suite — Live Schedule</title>
 
 <!-- Makes "Add to Home Screen" open full-screen without browser address bar -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Babe's Schedule">
+<meta name="apple-mobile-web-app-title" content="Live Schedule">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#2B2622">
 
@@ -37,6 +37,10 @@
     --gold-light:#F2E7CC;
     --line:#DDD3BF;
     --radius:14px;
+    --retro-blue:#1F4E79;
+    --retro-blue-deep:#0F2C46;
+    --retro-pink:#E8487A;
+    --retro-orange:#F2A649;
     --shadow:0 2px 10px rgba(43,38,34,0.08), 0 1px 2px rgba(43,38,34,0.06);
   }
 
@@ -58,10 +62,18 @@
     position:sticky;
     top:0;
     z-index:50;
-    background:var(--ink);
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 6px),
+      linear-gradient(180deg, #D6483F 0%, #E38249 26%, #EAB588 50%, #8FB3AB 74%, #2F7A8C 100%);
     color:var(--paper);
     padding: 8px 12px 6px 12px;
     box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+    overflow:hidden;
+  }
+  .ticket-header::after{
+    content:"";
+    position:absolute; left:0; right:0; bottom:0; height:3px;
+    background: linear-gradient(90deg, #8FA8D9, #B7A6E0, #D9A441);
   }
   .ticket-top-row{
     display:flex;
@@ -73,11 +85,16 @@
   .brand{
     font-family:'Oswald', sans-serif;
     font-weight:700;
-    font-size:13px;
-    letter-spacing:0.1em;
+    font-size:15px;
+    letter-spacing:0.08em;
     text-transform:uppercase;
-    color:var(--rust);
-    opacity:0.95;
+    background: linear-gradient(180deg, #ffffff 0%, #FBE3D0 35%, #EAB588 60%, #2F7A8C 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-stroke: 0.4px rgba(255,255,255,0.5);
+    filter: drop-shadow(0 0 6px rgba(214,72,63,0.5));
+    opacity:1;
   }
   .brand-sub{
     display:none;
@@ -178,8 +195,17 @@
     cursor:pointer;
   }
   .view-toggle.active{
-    background:var(--rust);
-    border-color:var(--rust);
+    background:radial-gradient(ellipse at 30% 22%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.22) 32%, rgba(255,255,255,0.06) 68%);
+    -webkit-backdrop-filter:blur(10px) saturate(160%);
+    backdrop-filter:blur(10px) saturate(160%);
+    border:1px solid rgba(255,255,255,0.5);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.65),
+      inset 0 -4px 6px rgba(0,0,0,0.18),
+      inset 2px 0 3px rgba(255,255,255,0.2),
+      inset -2px 0 3px rgba(0,0,0,0.08),
+      0 3px 7px rgba(0,0,0,0.25),
+      0 1px 2px rgba(0,0,0,0.15);
     color:var(--paper);
   }
   .view-toggle.more-btn{
@@ -187,8 +213,18 @@
     background:rgba(250,246,238,0.1);
   }
   .view-toggle.more-btn.active{
-    background:var(--rust);
-    border-color:var(--rust);
+    background:radial-gradient(ellipse at 30% 22%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.22) 32%, rgba(255,255,255,0.06) 68%);
+    -webkit-backdrop-filter:blur(10px) saturate(160%);
+    backdrop-filter:blur(10px) saturate(160%);
+    border:1px solid rgba(255,255,255,0.5);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.65),
+      inset 0 -4px 6px rgba(0,0,0,0.18),
+      inset 2px 0 3px rgba(255,255,255,0.2),
+      inset -2px 0 3px rgba(0,0,0,0.08),
+      0 3px 7px rgba(0,0,0,0.25),
+      0 1px 2px rgba(0,0,0,0.15);
+    color:var(--paper);
   }
   .more-menu{
     display:flex;
@@ -250,8 +286,17 @@
   .day-chip .dow{display:block; font-family:'Oswald',sans-serif; font-weight:600; font-size:9.5px; letter-spacing:0.04em;}
   .day-chip .dnum{display:block; font-size:12px; font-weight:600; margin-top:1px;}
   .day-chip.active{
-    background:var(--rust);
-    border-color:var(--rust);
+    background:radial-gradient(ellipse at 30% 22%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.22) 32%, rgba(255,255,255,0.06) 68%);
+    -webkit-backdrop-filter:blur(10px) saturate(160%);
+    backdrop-filter:blur(10px) saturate(160%);
+    border:1px solid rgba(255,255,255,0.5);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.65),
+      inset 0 -4px 6px rgba(0,0,0,0.18),
+      inset 2px 0 3px rgba(255,255,255,0.2),
+      inset -2px 0 3px rgba(0,0,0,0.08),
+      0 3px 7px rgba(0,0,0,0.25),
+      0 1px 2px rgba(0,0,0,0.15);
     color:var(--paper);
   }
   .day-chip.holiday{
@@ -311,14 +356,10 @@
     opacity:0.8;
   }
 
-  /* tear edge under header */
+  /* soft fade under header, replacing the old scalloped tear-edge dots */
   .tear{
-    height:7px;
-    background:var(--ink);
-    -webkit-mask: radial-gradient(circle at 8px 0, transparent 6px, black 6.5px) repeat-x;
-    mask: radial-gradient(circle at 8px 0, transparent 6px, black 6.5px) repeat-x;
-    mask-size: 16px 16px;
-    -webkit-mask-size: 16px 16px;
+    height:10px;
+    background: linear-gradient(180deg, rgba(74,59,122,0.18) 0%, rgba(74,59,122,0) 100%);
   }
 
   /* ---------- Main content ---------- */
@@ -1328,13 +1369,107 @@
     .summary-grid{ grid-template-columns: 1fr 1fr 1fr; }
   }  /* ---------- Print sheet (hidden on screen) ---------- */
   #printSheet{ display:none; }
+  #printSheetDiagonal{ display:none; }
 
   @media print{
+    .pp-sheet{
+      font-family:'Inter', sans-serif;
+    }
+    .pp-title{
+      font-weight:700;
+      font-size:14px;
+      margin-bottom:6px;
+    }
+    table.pgrid{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-family:'Inter', sans-serif;
+    }
+    table.pgrid th, table.pgrid td{
+      border:1px solid #333;
+      padding:0;
+    }
+    table.pgrid th{
+      font-size:6.3px;
+      font-weight:700;
+      text-align:center;
+      padding:2px 1px;
+      line-height:1.15;
+    }
+    table.pgrid th .pp-full{ display:block; font-weight:400; font-size:5px; }
+    td.pname{
+      font-weight:700;
+      font-size:6.3px;
+      text-align:left;
+      padding-left:3px;
+      vertical-align:middle;
+      width:62px;
+    }
+    td.pcell{
+      position:relative;
+      height:15.5px;
+      background: linear-gradient(to bottom right, transparent calc(50% - 0.4px), #333 calc(50% - 0.4px), #333 calc(50% + 0.4px), transparent calc(50% + 0.4px));
+    }
+    .pam, .ppm{
+      position:absolute;
+      font-size:5px;
+      white-space:nowrap;
+      transform:translate(-50%,-50%);
+    }
+    .pam{ left:29%; top:28%; }
+    .ppm{ left:71%; top:76%; }
+    .pbadge{
+      display:inline-block;
+      width:7px; height:7px;
+      border:0.6px solid #333;
+      border-radius:50%;
+      font-size:4.2px;
+      line-height:6.8px;
+      text-align:center;
+      margin-left:1px;
+      font-weight:700;
+    }
+    table.pkey{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-family:'Inter', sans-serif;
+      font-size:6px;
+      margin-top:5px;
+    }
+    table.pkey th, table.pkey td{
+      border:1px solid #333;
+      padding:1.5px 2px;
+      text-align:center;
+    }
+    table.pkey td.pkey-label{ text-align:left; font-weight:700; padding-left:3px; }
+    .pp-legend{
+      margin-top:4px;
+      font-size:5.8px;
+      color:#333;
+    }
+    .pp-section-title{
+      font-weight:700;
+      font-size:7px;
+      margin-top:5px;
+    }
+  }
+
+  @media print{
+
     @page{ size: landscape; margin: 0.25in; }
     body{ background:#fff !important; padding:0; margin:0; }
     body *{ visibility:hidden; }
     #printSheet, #printSheet *{ visibility:visible; }
+    #printSheetDiagonal, #printSheetDiagonal *{ visibility:visible; }
     #printSheet{
+      display:block;
+      position:absolute;
+      top:0; left:0;
+      width:100%;
+    }
+    #printSheetDiagonal.pp-active{
       display:block;
       position:absolute;
       top:0; left:0;
@@ -1477,7 +1612,7 @@
 <div class="ticket-header">
   <div class="ticket-top-row">
     <div>
-      <div class="brand">Babe's</div>
+      <div class="brand">Manager's Suite</div>
     </div>
     <div class="week-nav">
       <button class="week-nav-arrow" onclick="goToPreviousWeek()">‹</button>
@@ -1494,6 +1629,7 @@
   </div>
   <div class="more-menu" id="moreMenu" style="display: none;">
     <button class="view-toggle more-menu-item print-btn" onclick="toggleMoreMenu(); printSchedule();">🖨 Print</button>
+    <button class="view-toggle more-menu-item print-btn" onclick="toggleMoreMenu(); printScheduleDiagonal();">🖨 Print (Paper Format)</button>
     <button class="view-toggle more-menu-item export-btn" onclick="toggleMoreMenu(); exportSchedule();">⬇ Export</button>
     <button class="view-toggle more-menu-item import-btn" onclick="toggleMoreMenu(); openImportOverlay();">📥 Import from Claude</button>
     <button class="view-toggle more-menu-item timeoff-btn" onclick="toggleMoreMenu(); openTimeOffForm();">📅 Time Off</button>
@@ -1798,6 +1934,7 @@
 <div class="save-toast" id="saveToast">Saved</div>
 
 <div id="printSheet"></div>
+<div id="printSheetDiagonal"></div>
 
 <div class="sheet-overlay" id="sheetOverlay">
   <div class="sheet">
@@ -2034,7 +2171,7 @@
 <script>
 /* ---------------- Data model ---------------- */
 /* ---------------- Holiday / required-work-day detection ---------------- */
-// These are the days Babe's requires staff to work. Computed per-year so this
+// These are the days the restaurant requires staff to work. Computed per-year so this
 // keeps working correctly in future years, not just for whatever year is hardcoded.
 function getNthWeekdayOfMonth(year, month, weekday, n){
   // month is 0-indexed (0=Jan), weekday 0=Sun..6=Sat, n is 1st/2nd/3rd/4th occurrence
@@ -3478,7 +3615,7 @@ function printCellText(v){
 function buildPrintTable(){
   const weekLabel = document.getElementById("weekPill").textContent;
   const grandTotal = totalScheduledHours();
-  let html = `<div class="ph-title">Babe's Chicken Dinner House — Daily Schedule</div>`;
+  let html = `<div class="ph-title">Manager's Suite — Daily Schedule</div>`;
   html += `<div class="ph-sub">Week of ${weekLabel} &nbsp;·&nbsp; Front of House &nbsp;·&nbsp; <b>Total scheduled hours: ${grandTotal}</b></div>`;
   html += `<table class="print-table"><thead><tr><th colspan="2">Staff</th>`;
   DAYS.forEach(d=>{ html += `<th>${d.dow} ${d.date}</th>`; });
@@ -3508,8 +3645,117 @@ function buildPrintTable(){
   document.getElementById("printSheet").innerHTML = html;
 }
 
+function setPrintPageSize(orientation, marginIn){
+  let styleEl = document.getElementById("pageSizeOverride");
+  if(!styleEl){
+    styleEl = document.createElement("style");
+    styleEl.id = "pageSizeOverride";
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = `@page{ size: ${orientation}; margin: ${marginIn}in; }`;
+}
+
+const FULL_DAY_NAMES = {
+  THU: ["Thursday","Jueves"], FRI: ["Friday","Viernes"], SAT: ["Saturday","Sabado"],
+  SUN: ["Sunday","Domingo"], MON: ["Monday","Lunes"], TUE: ["Tuesday","Martes"], WED: ["Wednesday","Miercoles"]
+};
+
+function formatCellForPrint(v){
+  if(v === "" || v === "No") return {text:"—", badge:null};
+  if(v === "R/O" || v === "OFF") return {text:"off", badge:null};
+  if(v === "Yes") return {text:"", badge:null};
+  const m = /^(.*)\s+Close\s+([ABC])$/.exec(v);
+  if(m) return {text:m[1], badge:m[2]};
+  return {text:v, badge:null};
+}
+
+function buildDiagonalPrintTable(){
+  const names = Object.keys(staff);
+  const first = DAYS[0], last = DAYS[6];
+  let html = `<div class="pp-sheet">`;
+  html += `<div class="pp-title">Schedule for: Servers &nbsp;&nbsp;&nbsp; Week of: ${first.date} &nbsp;&nbsp; Thru: ${last.date}, 2026</div>`;
+
+  html += `<table class="pgrid"><thead><tr><th style="width:62px;">Employee</th>`;
+  DAYS.forEach(d=>{
+    const [full, span] = FULL_DAY_NAMES[d.dow];
+    html += `<th>${d.dow} ${d.date}<span class="pp-full">${full}<br>${span}</span></th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  names.forEach(name=>{
+    const shortName = name.split(" ")[0];
+    html += `<tr><td class="pname">${shortName}</td>`;
+    DAYS.forEach((d,i)=>{
+      const am = formatCellForPrint(staff[name].am[i]);
+      const pm = formatCellForPrint(staff[name].pm[i]);
+      html += `<td class="pcell">`;
+      html += `<span class="pam">${am.text}${am.badge ? `<span class="pbadge">${am.badge}</span>` : ""}</span>`;
+      html += `<span class="ppm">${pm.text}${pm.badge ? `<span class="pbadge">${pm.badge}</span>` : ""}</span>`;
+      html += `</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // Key Roles + Staff Count, reusing the app's own per-day stats logic
+  const roleRows = ["AM Open","AM Close","PM Open","PM Close A","PM Close B","PM Close C"];
+  html += `<div class="pp-section-title">Key Roles</div>`;
+  html += `<table class="pkey"><thead><tr><th></th>`;
+  DAYS.forEach(d=>{ html += `<th>${d.dow}</th>`; });
+  html += `</tr></thead><tbody>`;
+  roleRows.forEach(role=>{
+    html += `<tr><td class="pkey-label">${role}</td>`;
+    DAYS.forEach((d,i)=>{
+      const s = buildDayFooterSummary(i);
+      let val = "—";
+      if(role==="AM Open") val = s.shortName(s.amOpener);
+      else if(role==="AM Close") val = s.shortName(s.amCloser);
+      else if(role==="PM Open") val = s.isWeekend ? "—" : s.shortName(s.pmOpener);
+      else if(role==="PM Close A") val = s.shortName(s.pmA);
+      else if(role==="PM Close B") val = s.shortName(s.pmB);
+      else if(role==="PM Close C") val = s.shortName(s.pmC);
+      html += `<td>${val}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+
+  html += `<div class="pp-section-title">Staff Count</div>`;
+  html += `<table class="pkey"><thead><tr><th></th>`;
+  DAYS.forEach(d=>{ html += `<th>${d.dow}</th>`; });
+  html += `</tr></thead><tbody>`;
+  ["# Working AM","# Working PM"].forEach((lab,r)=>{
+    html += `<tr><td class="pkey-label">${lab}</td>`;
+    DAYS.forEach((d,i)=>{
+      const period = r===0 ? "am" : "pm";
+      const cnt = names.filter(n => {
+        const v = staff[n][period][i];
+        return v !== "No" && v !== "R/O" && v !== "OFF" && v !== "";
+      }).length;
+      html += `<td><b>${cnt}</b></td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+
+  html += `<div class="pp-legend">OFF = Means Request Granted &nbsp; BLANK = Means Not Scheduled &nbsp; — = Means Permanent Day OFF &nbsp; circled letter = Close A/B/C station</div>`;
+  html += `</div>`;
+
+  document.getElementById("printSheetDiagonal").innerHTML = html;
+}
+
+function printScheduleDiagonal(){
+  document.getElementById("printSheet").classList.remove("pp-active");
+  buildDiagonalPrintTable();
+  document.getElementById("printSheetDiagonal").classList.add("pp-active");
+  setPrintPageSize("portrait", 0.3);
+  setTimeout(()=> window.print(), 80);
+}
+
 function printSchedule(){
+  document.getElementById("printSheetDiagonal").classList.remove("pp-active");
   buildPrintTable();
+  setPrintPageSize("landscape", 0.25);
   setTimeout(()=> window.print(), 80);
 }
 
@@ -3596,7 +3842,7 @@ async function exportSchedule(){
 
   const today = new Date();
   const stamp = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
-  const filename = `Babe_Schedule_${stamp}.html`;
+  const filename = `Live_Schedule_${stamp}.html`;
 
   // Prefer the File System Access API so the person can pick exactly where
   // to save and what to name it. Not all browsers support this (notably
@@ -4346,6 +4592,16 @@ function render(){
   loadCurrentNote();
 }
 
+function getCateringConflict(name, dateIso){
+  try{
+    const raw = localStorage.getItem("babes_storage_personal_catering_events");
+    if(!raw) return null;
+    const events = JSON.parse(raw);
+    const hit = events.find(e => e.date === dateIso && Array.isArray(e.staff) && e.staff.includes(name));
+    return hit ? hit.client : null;
+  }catch(e){ return null; }
+}
+
 /* ---------------- Picker sheet ---------------- */
 let sheetCtx = null;
 
@@ -4361,11 +4617,19 @@ function openSheet(name, period){
 
   const isWeekend = (currentDay === 2 || currentDay === 3);
   const noteEl = document.getElementById("sheetNote");
+  const cateringHit = getCateringConflict(name, DAYS[currentDay].iso);
+  let noteText = "";
   if(isWeekend && period === "pm" && AM_SHIFTS.includes(staff[name].am[currentDay])){
-    noteEl.textContent = "Picking 1-V will clear their morning shift — can't work both.";
-    noteEl.style.display = "block";
+    noteText = "Picking 1-V will clear their morning shift — can't work both.";
   } else if(isWeekend && period === "am" && staff[name].pm[currentDay] === "1-V"){
-    noteEl.textContent = "They're on 1-V tonight — picking a real AM shift will clear it.";
+    noteText = "They're on 1-V tonight — picking a real AM shift will clear it.";
+  }
+  if(cateringHit){
+    const cateringNote = `⚠ Already booked for catering this day: "${cateringHit}"`;
+    noteText = noteText ? (noteText + "  " + cateringNote) : cateringNote;
+  }
+  if(noteText){
+    noteEl.textContent = noteText;
     noteEl.style.display = "block";
   } else {
     noteEl.style.display = "none";

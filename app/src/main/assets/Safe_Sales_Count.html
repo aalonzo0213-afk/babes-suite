@@ -25,7 +25,7 @@
     --green-pale: #eaf3e2;
     --red: #b5483a;
     --red-pale: #fbe9e6;
-    --accent: #1F4E79;
+    --accent: #D9A441;
     --locked-bg: #f0eee6;
     --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
   }
@@ -41,7 +41,7 @@
   }
 
   header{
-    background: var(--accent);
+    background: linear-gradient(180deg, #E8C179 0%, #D9A441 45%, #B07F2A 100%);
     color: #fff;
     padding: 14px 16px 16px;
     position: sticky;
@@ -105,7 +105,7 @@
   .section{
     background: var(--panel);
     border-radius: 12px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 4px 10px rgba(0,0,0,0.08);
     margin-bottom: 14px;
     overflow: hidden;
     border: 1px solid var(--line);
@@ -123,16 +123,28 @@
     justify-content:space-between;
   }
 
-  .section-head.before{ background: #6b8fae; }
-  .section-head.after{ background: var(--accent); }
-  .section-head.tips{ background: #9c7c4f; }
-  .section-head.sales{ background: #7d6b9c; }
+  .section-head{
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -3px 5px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .section-head.before{ background: linear-gradient(180deg, #8FAFC7 0%, #6b8fae 55%, #4F6D87 100%); }
+  .section-head.after{ background: linear-gradient(180deg, #E8C179 0%, #D9A441 55%, #B07F2A 100%); }
+  .section-head.tips{ background: linear-gradient(180deg, #B89A6E 0%, #9c7c4f 55%, #7A5F39 100%); }
+  .section-head.sales{ background: linear-gradient(180deg, #9C87B5 0%, #7d6b9c 55%, #5F4F78 100%); }
 
   .section-body{ padding: 10px 12px 14px; }
 
   .pull-btn{
-    background: rgba(255,255,255,0.18);
-    border: 1px solid rgba(255,255,255,0.5);
+    background:radial-gradient(ellipse at 30% 22%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.22) 32%, rgba(255,255,255,0.06) 68%);
+    -webkit-backdrop-filter:blur(10px) saturate(160%);
+    backdrop-filter:blur(10px) saturate(160%);
+    border:1px solid rgba(255,255,255,0.5);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.65),
+      inset 0 -4px 6px rgba(0,0,0,0.18),
+      inset 2px 0 3px rgba(255,255,255,0.2),
+      inset -2px 0 3px rgba(0,0,0,0.08),
+      0 3px 7px rgba(0,0,0,0.25),
+      0 1px 2px rgba(0,0,0,0.15);
     color:#fff;
     font-size:0.7rem;
     padding:5px 9px;
@@ -326,13 +338,14 @@
   }
   .add-person-btn{
     font-size:0.68rem;
-    background: var(--green-pale);
+    background: linear-gradient(180deg, #eaf3e2 0%, #cfe6bd 55%, #a9d090 100%);
     color: var(--green-deep);
     border: 1px solid var(--green);
     border-radius:6px;
     padding:3px 8px;
     cursor:pointer;
     font-family:inherit;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -2px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.08);
   }
   .add-person-btn:active{ background: var(--green); color:#fff; }
 
@@ -374,14 +387,16 @@
     font-family: inherit;
   }
   .btn.secondary{
-    background: #fff;
+    background: linear-gradient(180deg, #ffffff 0%, #FBEADC 60%, #F2D9B8 100%);
     color: var(--accent);
     border: 1px solid var(--accent);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -2px 3px rgba(176,127,42,0.12), 0 1px 3px rgba(0,0,0,0.08);
   }
   .btn.danger{
-    background: var(--red-pale);
+    background: linear-gradient(180deg, #fbe9e6 0%, #f3c9c0 55%, #e8a89b 100%);
     color: var(--red);
     border: 1px solid var(--red);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -2px 3px rgba(181,72,58,0.15), 0 1px 3px rgba(0,0,0,0.08);
   }
 
   .small-note{
@@ -449,7 +464,7 @@
         <div class="subtotal"><span>PM Hours <span class="lock-tag">LOCKED</span></span><span class="val" id="pmTipHoursTotal">0.0</span></div>
       </div>
 
-      <button type="button" id="pushTipsToSalesBtn" style="width:100%;margin-top:14px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 10px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;">⤵ Push AM/PM CC &amp; Cash to Sales</button>
+      <button type="button" id="pushTipsToSalesBtn" style="width:100%;margin-top:14px;background:linear-gradient(180deg, #E8C179 0%, #D9A441 55%, #B07F2A 100%);color:#fff;border:none;border-radius:8px;padding:9px 10px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.12);">⤵ Push AM/PM CC &amp; Cash to Sales</button>
 
     </div>
   </div>

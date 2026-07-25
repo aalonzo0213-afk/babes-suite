@@ -21,13 +21,11 @@
   }
   /* Gingham picnic-cloth band */
   .gingham {
-    height: 18px;
-    background:
-      repeating-linear-gradient(90deg, rgba(31,78,121,.85) 0 14px, rgba(31,78,121,.35) 14px 28px),
-      repeating-linear-gradient(0deg, var(--cream) 0 9px, rgba(31,78,121,.25) 9px 18px);
+    height: 14px;
+    background: linear-gradient(180deg, rgba(47,122,140,0.25) 0%, rgba(47,122,140,0) 100%);
   }
   header {
-    background: var(--red);
+    background: linear-gradient(180deg, #D6483F 0%, #E38249 30%, #EAB588 55%, #8FB3AB 78%, #2F7A8C 100%);
     color: var(--cream);
     padding: 26px 22px 20px;
     text-align: center;
@@ -49,36 +47,60 @@
     margin: 0 auto;
     padding: 26px 18px 40px;
     display: grid;
-    gap: 16px;
+    gap: 22px;
   }
   .card {
     display: flex;
     align-items: center;
     gap: 16px;
-    background: #fff;
-    border: 1.5px solid rgba(31,78,121,.18);
+    background: linear-gradient(165deg, #ffffff 0%, #fbf6ec 50%, #f2e6d0 100%);
+    border: 1px solid rgba(43,35,32,.12);
     border-radius: 14px;
     padding: 18px 18px;
     text-decoration: none;
     color: var(--charcoal);
-    box-shadow: 0 2px 6px rgba(43,35,32,.07);
-    transition: transform .08s ease;
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,1),
+      inset 0 -3px 6px rgba(43,35,32,0.08),
+      0 2px 4px rgba(43,35,32,.1),
+      0 10px 22px rgba(43,35,32,.22);
+    transition: transform .08s ease, box-shadow .08s ease;
   }
-  .card:active { transform: scale(.985); background: #FFF9EC; }
+  .card:active {
+    transform: scale(.985);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.9),
+      inset 0 1px 4px rgba(43,35,32,0.1),
+      0 1px 2px rgba(43,35,32,.05);
+  }
   .badge {
     flex: 0 0 auto;
     width: 54px;
     height: 54px;
     border-radius: 12px;
-    background: var(--red);
-    color: var(--cream);
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: Georgia, serif;
     font-size: 24px;
-    border: 2px solid var(--gold);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.35);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.55),
+      inset 0 -4px 6px rgba(0,0,0,0.22),
+      inset 2px 0 3px rgba(255,255,255,0.15),
+      inset -2px 0 3px rgba(0,0,0,0.1),
+      0 3px 6px rgba(0,0,0,0.22),
+      0 1px 2px rgba(0,0,0,0.15);
   }
+  .badge::before{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse at 30% 22%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.15) 32%, rgba(255,255,255,0) 65%);
+  }
+  .badge span{ position:relative; z-index:1; }
   .card h2 { font-size: 18px; font-family: Georgia, serif; }
   .card span { display: block; margin-top: 3px; font-size: 13.5px; color: #6d615b; }
   footer {
@@ -108,31 +130,35 @@
       file: "Live_Schedule.html",
       badge: "S",
       name: "Live Schedule",
-      desc: "Weekly server schedule, time off, availability & call-out log"
+      desc: "Weekly server schedule, time off, availability & call-out log",
+      grad: "#C0503A"
     },
     {
-      file: "Babes_Safe_Sales_Count.html",
+      file: "Safe_Sales_Count.html",
       badge: "$",
       name: "Safe & Sales Count",
-      desc: "Daily before/after safe counts, sales & togo tips"
+      desc: "Daily before/after safe counts, sales & togo tips",
+      grad: "#D9A441"
     },
     {
-      file: "Babes_Table_Server_Count.html",
+      file: "Table_Server_Count.html",
       badge: "T",
       name: "Table & Server Count",
-      desc: "15-minute counts, targets, trends & staffing suggestions"
+      desc: "15-minute counts, targets, trends & staffing suggestions",
+      grad: "#2F7A8C"
     },
     {
-      file: "Babes_Catering.html",
+      file: "Catering.html",
       badge: "C",
       name: "Catering",
-      desc: "Events, staff assignment, gratuity split & FOH conflict check"
+      desc: "Events, staff assignment, gratuity split & FOH conflict check",
+      grad: "#E38249"
     }
   ];
 
   document.getElementById("cards").innerHTML = apps.map(a => `
     <a class="card" href="${a.file}">
-      <div class="badge">${a.badge}</div>
+      <div class="badge" style="background:${a.grad};"><span>${a.badge}</span></div>
       <div>
         <h2>${a.name}</h2>
         <span>${a.desc}</span>

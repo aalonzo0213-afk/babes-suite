@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#E38249">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Catering — Manager's Suite</title>
+<style>
+  :root{
+    --paper:#FAF3E3;
+    --ink:#2B2320;
+    --ink-soft:#6d615b;
+    --line:#e4d9c2;
+    --rail:#1F4E79;
+    --rail-light:#dce8f4;
+    --gold:#D9A441;
+    --gold-soft:#f6e6c4;
+    --green:#3f6f4c;
+    --green-soft:#e3eee2;
+    --card:#fffdf8;
+    font-size:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Iowan Old Style','Palatino Linotype',Georgia,serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-family:'Courier New',ui-monospace,monospace;}
+
+  header{
+    background: linear-gradient(180deg, #F2AB7C 0%, #E38249 45%, #C25F2E 100%);
+    color:var(--rail-light);
+    padding:16px 16px 12px;
+    position:sticky; top:0; z-index:30;
+    box-shadow:0 2px 6px rgba(0,0,0,0.18);
+  }
+  .brand{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+  .brand h1{ margin:0; font-size:1.3rem; font-weight:400; letter-spacing:.02em; }
+  .brand h1 em{ font-style:italic; color:var(--gold); }
+  .staff-btn{
+    background:radial-gradient(ellipse at 30% 22%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.22) 32%, rgba(255,255,255,0.06) 68%);
+    -webkit-backdrop-filter:blur(10px) saturate(160%);
+    backdrop-filter:blur(10px) saturate(160%);
+    border:1px solid rgba(255,255,255,0.5);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.65),
+      inset 0 -4px 6px rgba(0,0,0,0.18),
+      0 2px 5px rgba(0,0,0,0.2);
+    color:#fff;
+    border-radius:999px; padding:5px 13px; font-size:.72rem; cursor:pointer; font-family:inherit;
+  }
+  .month-nav{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; gap:8px; }
+  .month-nav button{
+    background:radial-gradient(ellipse at 30% 22%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.22) 32%, rgba(255,255,255,0.06) 68%);
+    -webkit-backdrop-filter:blur(10px) saturate(160%);
+    backdrop-filter:blur(10px) saturate(160%);
+    border:1px solid rgba(255,255,255,0.5);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.65),
+      inset 0 -4px 6px rgba(0,0,0,0.18),
+      0 2px 5px rgba(0,0,0,0.2);
+    color:#fff;
+    border-radius:999px; width:32px; height:32px; font-size:1rem; cursor:pointer; flex:none;
+  }
+  .month-nav button:active{ background: rgba(255,255,255,0.35); }
+  .month-title{ font-size:1.1rem; text-align:center; flex:1; cursor:pointer; user-select:none; }
+  .month-title .yr{ color:#9db8d6; font-size:.82em; }
+  .summary-strip{ display:flex; gap:8px; margin-top:10px; overflow-x:auto; }
+  .pill{ background: rgba(0,0,0,0.18); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:6px 12px; flex:none; min-width:100px; }
+  .pill .label{ font-size:.6rem; letter-spacing:.06em; text-transform:uppercase; color:#8fa9c4; display:block; }
+  .pill .val{ font-size:1rem; color:#f3efe3; display:block; margin-top:1px; }
+
+  main{ max-width:760px; margin:0 auto; padding:14px 12px 100px; }
+
+  .weekday-row{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px; }
+  .weekday-row span{ text-align:center; font-size:.64rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft); }
+
+  .grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .day-cell{
+    background:var(--card); border:1px solid var(--line); border-radius:8px;
+    min-height:68px; padding:5px 4px 6px; display:flex; flex-direction:column;
+    cursor:pointer; position:relative; text-align:left;
+  }
+  .day-cell.empty{ background:transparent; border:none; cursor:default; }
+  .day-cell.today{ border-color:var(--gold); box-shadow:inset 0 0 0 1px var(--gold); }
+  .day-num{ font-size:.76rem; color:var(--ink-soft); }
+  .day-cell.today .day-num{ color:#b5822a; font-weight:bold; }
+  .day-dots{ display:flex; gap:2px; margin-top:auto; flex-wrap:wrap; }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--gold); }
+  .dot.full{ background:var(--green); }
+  .day-label{ font-size:.6rem; color:var(--ink-soft); margin-top:2px; line-height:1.15; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .fab{
+    position:fixed; bottom:22px; right:18px; width:56px; height:56px; border-radius:50%;
+    background: linear-gradient(180deg, #E8C179 0%, #D9A441 55%, #B07F2A 100%);
+    color:#fff; border:none; font-size:1.6rem;
+    box-shadow: inset 0 2px 3px rgba(255,255,255,0.5), inset 0 -3px 5px rgba(0,0,0,0.2), 0 4px 10px rgba(0,0,0,.3);
+    cursor:pointer; z-index:40; line-height:0;
+  }
+  .fab:active{ transform:scale(.95); }
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(31,25,20,.45); z-index:50;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .overlay.open{ display:flex; }
+  .sheet{
+    background:var(--paper); width:100%; max-width:760px; border-radius:16px 16px 0 0;
+    padding:16px 16px 24px; max-height:85vh; overflow-y:auto;
+  }
+  .sheet-handle{ width:36px; height:4px; background:var(--line); border-radius:99px; margin:0 auto 12px; }
+  .sheet h2{ margin:0 0 4px; font-size:1.15rem; }
+  .sheet-sub{ font-size:.78rem; color:var(--ink-soft); margin-bottom:12px; }
+  .sheet-close{ position:absolute; top:14px; right:16px; background:none; border:none; font-size:1.1rem; color:var(--ink-soft); cursor:pointer; }
+
+  .event-card{
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; margin-bottom:8px; cursor:pointer;
+  }
+  .event-card .ev-name{ font-weight:700; font-size:.95rem; }
+  .event-card .ev-meta{ font-size:.78rem; color:var(--ink-soft); margin-top:2px; }
+  .staff-progress{
+    display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:99px;
+    margin-top:5px; background:var(--gold-soft); color:#8a5f16;
+  }
+  .staff-progress.full{ background:var(--green-soft); color:var(--green); }
+  .add-event-btn{
+    width:100%; padding:11px; border-radius:10px; border:1.5px dashed var(--gold);
+    background:transparent; color:#8a5f16; font-family:inherit; font-size:.9rem; cursor:pointer; margin-top:6px;
+  }
+
+  label{ display:block; font-size:.78rem; color:var(--ink-soft); margin:12px 0 4px; }
+  input[type=text], input[type=number], input[type=date], input[type=time], textarea, select{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px;
+    font-family:inherit; font-size:.92rem; background:#fff; color:var(--ink);
+  }
+  textarea{ min-height:60px; resize:vertical; }
+  .field-row{ display:flex; gap:10px; }
+  .field-row > div{ flex:1; }
+
+  .chip-pool{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .chip{
+    padding:6px 12px; border-radius:99px; border:1px solid var(--line); background:#fff;
+    font-size:.8rem; cursor:pointer; user-select:none;
+  }
+  .chip.selected{ background:var(--rail); color:#fff; border-color:var(--rail); }
+  .chip.starred::before{ content:"★ "; color:var(--gold); }
+  .chip.conflict{ border-color:#c0503a; background:#fbe9e5; }
+  .chip.conflict.selected{ background:#c0503a; border-color:#c0503a; }
+  .chip-warning{ font-size:.68rem; color:#c0503a; display:block; margin-top:2px; }
+
+  .chip.selected.starred::before{ color:#ffd97a; }
+  .assign-count{ font-size:.8rem; color:var(--ink-soft); margin-top:6px; }
+  .assign-count b{ color:var(--ink); }
+
+  .split-toggle{ display:flex; gap:8px; margin-top:6px; }
+  .split-toggle button{
+    flex:1; padding:8px; border-radius:8px; border:1px solid var(--line); background:#fff;
+    font-family:inherit; font-size:.82rem; cursor:pointer;
+  }
+  .split-toggle button.active{ background:var(--rail); color:#fff; border-color:var(--rail); }
+  .custom-split-row{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--line); font-size:.85rem; }
+  .custom-split-row input{ width:80px; text-align:right; }
+
+  .sheet-actions{ display:flex; gap:10px; margin-top:18px; }
+  .btn-primary{ flex:1; padding:12px; border-radius:10px; border:none; background:var(--rail); color:#fff; font-family:inherit; font-size:.9rem; cursor:pointer; }
+  .btn-danger{ padding:12px 16px; border-radius:10px; border:1px solid #c0503a; background:transparent; color:#c0503a; font-family:inherit; font-size:.9rem; cursor:pointer; }
+
+  .settings-row{ display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); }
+  .settings-row .name{ font-size:.9rem; }
+  .toggle-group{ display:flex; gap:14px; align-items:center; }
+  .toggle-group label{ margin:0; font-size:.72rem; display:flex; align-items:center; gap:4px; }
+  .switch{ position:relative; width:38px; height:22px; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch-track{ position:absolute; inset:0; background:var(--line); border-radius:99px; cursor:pointer; transition:.15s; }
+  .switch-track::before{ content:""; position:absolute; width:16px; height:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.15s; }
+  .switch input:checked + .switch-track{ background:var(--rail); }
+  .switch input:checked + .switch-track::before{ transform:translateX(16px); }
+
+  .empty-note{ text-align:center; color:var(--ink-soft); font-size:.85rem; padding:20px 10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Cater<em>ing</em></h1>
+    <button class="staff-btn" id="staffPoolBtn">Staff</button>
+  </div>
+  <div class="month-nav">
+    <button id="prevBtn">‹</button>
+    <div class="month-title" id="monthTitle"></div>
+    <button id="nextBtn">›</button>
+  </div>
+  <div class="summary-strip" id="summaryStrip"></div>
+</header>
+
+<main>
+  <div class="weekday-row">
+    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+  </div>
+  <div class="grid" id="calGrid"></div>
+</main>
+
+<button class="fab" id="fabAdd">+</button>
+
+<!-- Day sheet -->
+<div class="overlay" id="dayOverlay">
+  <div class="sheet">
+    <button class="sheet-close" id="dayClose">✕</button>
+    <div class="sheet-handle"></div>
+    <h2 id="daySheetTitle"></h2>
+    <div class="sheet-sub">Tap an event to view or edit it.</div>
+    <div id="dayEventsList"></div>
+    <button class="add-event-btn" id="addEventForDay">+ New Event This Day</button>
+  </div>
+</div>
+
+<!-- Event editor sheet -->
+<div class="overlay" id="eventOverlay">
+  <div class="sheet">
+    <button class="sheet-close" id="eventClose">✕</button>
+    <div class="sheet-handle"></div>
+    <h2 id="eventSheetTitle">New Event</h2>
+
+    <label>Client / Event Name</label>
+    <input type="text" id="evClient" placeholder="e.g. Reyes Family Reunion">
+
+    <div class="field-row">
+      <div>
+        <label>Date</label>
+        <input type="date" id="evDate">
+      </div>
+      <div>
+        <label>Time</label>
+        <input type="text" id="evTime" placeholder="e.g. 6:00 PM">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div>
+        <label>Party Size</label>
+        <input type="number" id="evParty" min="0" placeholder="0">
+      </div>
+      <div>
+        <label>Staff Needed</label>
+        <input type="number" id="evStaffNeeded" min="0" placeholder="0">
+      </div>
+    </div>
+
+    <label>Assign Staff <span style="font-weight:400;">(from your Catering-Eligible pool)</span></label>
+    <div class="chip-pool" id="staffChipPool"></div>
+    <div class="assign-count" id="assignCount"></div>
+
+    <label>Gratuity Total ($)</label>
+    <input type="number" id="evGratuity" min="0" step="0.01" placeholder="0.00">
+    <div class="split-toggle">
+      <button id="splitEvenBtn" class="active">Split Evenly</button>
+      <button id="splitCustomBtn">Custom Split</button>
+    </div>
+    <div id="customSplitArea" style="display:none; margin-top:8px;"></div>
+    <div id="splitPreview" class="sheet-sub" style="margin-top:6px;"></div>
+
+    <label>Notes</label>
+    <textarea id="evNotes" placeholder="Setup details, contact info, special requests..."></textarea>
+
+    <div class="sheet-actions">
+      <button class="btn-danger" id="deleteEventBtn" style="display:none;">Delete</button>
+      <button class="btn-primary" id="saveEventBtn">Save Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- Staff pool / settings sheet -->
+<div class="overlay" id="staffOverlay">
+  <div class="sheet">
+    <button class="sheet-close" id="staffClose">✕</button>
+    <div class="sheet-handle"></div>
+    <h2>Catering-Eligible Staff</h2>
+    <div class="sheet-sub">Toggle who can be assigned to catering events, and star your most-used people so they're pinned at the top of the picker.</div>
+    <div id="staffSettingsList"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+// ---------------------------------------------------------------------------
+// window.storage polyfill -- localStorage-backed, same approach used across
+// Manager's Suite so this tool persists standalone in the WebView.
+// ---------------------------------------------------------------------------
+if(typeof window.storage === "undefined"){
+  (function(){
+    function nsKey(key, shared){ return "babes_storage_" + (shared ? "shared_" : "personal_") + key; }
+    window.storage = {
+      async get(key, shared){
+        shared = !!shared;
+        try{
+          const raw = localStorage.getItem(nsKey(key, shared));
+          if(raw === null) return null;
+          return { key, value: raw, shared };
+        }catch(e){ return null; }
+      },
+      async set(key, value, shared){
+        shared = !!shared;
+        try{
+          localStorage.setItem(nsKey(key, shared), value);
+          return { key, value, shared };
+        }catch(e){ return null; }
+      },
+      async delete(key, shared){
+        shared = !!shared;
+        try{
+          const k = nsKey(key, shared);
+          const existed = localStorage.getItem(k) !== null;
+          localStorage.removeItem(k);
+          return { key, deleted: existed, shared };
+        }catch(e){ return null; }
+      },
+      async list(prefix, shared){
+        shared = !!shared; prefix = prefix || "";
+        try{
+          const nsPrefixFull = "babes_storage_" + (shared ? "shared_" : "personal_");
+          const searchPrefix = nsPrefixFull + prefix;
+          const keys = [];
+          for(let i=0;i<localStorage.length;i++){
+            const k = localStorage.key(i);
+            if(k && k.indexOf(searchPrefix)===0) keys.push(k.slice(nsPrefixFull.length));
+          }
+          return { keys, prefix, shared };
+        }catch(e){ return null; }
+      }
+    };
+  })();
+}
+
+function weekStartIsoFor(dateStr){
+  const d = new Date(dateStr + "T00:00:00");
+  const offset = (d.getDay() - 4 + 7) % 7; // days since the most recent Thursday
+  d.setDate(d.getDate() - offset);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function dayIndexInWeek(dateStr){
+  const d = new Date(dateStr + "T00:00:00");
+  return (d.getDay() - 4 + 7) % 7; // 0=Thu ... 6=Wed, matching the schedule app's day order
+}
+function getScheduleConflict(name, dateStr){
+  try{
+    const weekStart = weekStartIsoFor(dateStr);
+    const raw = localStorage.getItem("babes_storage_personal_babes-schedule-data-" + weekStart);
+    if(!raw) return null;
+    const staffData = JSON.parse(raw);
+    const person = staffData[name];
+    if(!person) return null;
+    const idx = dayIndexInWeek(dateStr);
+    const am = person.am ? person.am[idx] : null;
+    const pm = person.pm ? person.pm[idx] : null;
+    const working = v => v && v!=="No" && v!=="R/O" && v!=="OFF" && v!=="";
+    if(working(am) || working(pm)){
+      return (working(am) ? am : "") + (working(am) && working(pm) ? " / " : "") + (working(pm) ? pm : "");
+    }
+    return null;
+  }catch(e){ return null; }
+}
+
+// ---- Canonical roster (matches the Live Schedule staff list) ----
+const ROSTER = [
+  "Macy Lombardo","Wendy","Christina","Damon Neros","Monica Argueta","Nayeli A. Perez",
+  "Tori Lash","Brooke Koomey","Ximena Ramirez","Miranda Sanchez","Lizelle Arevalo",
+  "Lupita Padron","Jazlynn Gomez","Landry Mills","Jacob Muñoz","Emily Koomey","Jayla Felix",
+  "Isabella Escamilla","Cynthia Moreno","Olivia Leonard","Ella Ward","Morgan Mills",
+  "Parker Morris","Peyton Morris","Andrea Argueta","Payton Casey","Adam Hantouli",
+  "Bianca Gomez","Jaxon","Melanie"
+];
+
+let events = [];               // {id, date, client, time, party, staffNeeded, staff:[names], gratuity, splitMode, customSplits:{}, notes}
+let staffPool = {};            // { name: {eligible:bool, starred:bool} }
+let viewYear, viewMonth;
+let todayDate = new Date();
+let todayStr = fmtDate(todayDate);
+let activeDayStr = null;
+let editingEventId = null;
+let selectedStaff = [];
+let splitMode = "even";
+
+function fmtDate(d){
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function uid(){ return "ev_"+Date.now()+"_"+Math.random().toString(36).slice(2,8); }
+
+async function loadData(){
+  try{
+    const r = await window.storage.get("catering_events");
+    events = r ? JSON.parse(r.value) : [];
+  }catch(e){ events = []; }
+  try{
+    const r2 = await window.storage.get("catering_staff_pool");
+    staffPool = r2 ? JSON.parse(r2.value) : {};
+  }catch(e){ staffPool = {}; }
+  ROSTER.forEach(n=>{ if(!staffPool[n]) staffPool[n] = {eligible:false, starred:false}; });
+}
+async function saveEvents(){ await window.storage.set("catering_events", JSON.stringify(events)); }
+async function saveStaffPool(){ await window.storage.set("catering_staff_pool", JSON.stringify(staffPool)); }
+
+function eventsOn(dateStr){ return events.filter(e=>e.date===dateStr); }
+
+function isFullyStaffed(e){ return e.staff.length >= (e.staffNeeded||0) && (e.staffNeeded||0) > 0; }
+
+// ---------------- Calendar render ----------------
+function render(){
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("monthTitle").innerHTML = monthNames[viewMonth] + ' <span class="yr">' + viewYear + '</span>';
+
+  const grid = document.getElementById("calGrid");
+  grid.innerHTML = "";
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  const startDow = firstOfMonth.getDay();
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+
+  for(let i=0;i<startDow;i++){
+    const cell = document.createElement("div");
+    cell.className = "day-cell empty";
+    grid.appendChild(cell);
+  }
+  for(let day=1; day<=daysInMonth; day++){
+    const d = new Date(viewYear, viewMonth, day);
+    const dateStr = fmtDate(d);
+    const dayEvents = eventsOn(dateStr);
+    const cell = document.createElement("div");
+    cell.className = "day-cell" + (dateStr===todayStr ? " today" : "");
+    let html = '<span class="day-num">'+day+'</span>';
+    if(dayEvents.length){
+      const label = dayEvents.length===1 ? dayEvents[0].client : dayEvents.length+" events";
+      html += '<span class="day-label">'+escapeHtml(label)+'</span>';
+      html += '<div class="day-dots">' + dayEvents.map(e=>'<span class="dot'+(isFullyStaffed(e)?' full':'')+'"></span>').join('') + '</div>';
+    }
+    cell.innerHTML = html;
+    cell.addEventListener("click", ()=> openDaySheet(dateStr));
+    grid.appendChild(cell);
+  }
+
+  renderSummary();
+}
+
+function renderSummary(){
+  const monthEvents = events.filter(e=>{
+    const d = new Date(e.date+"T00:00:00");
+    return d.getFullYear()===viewYear && d.getMonth()===viewMonth;
+  });
+  const totalGratuity = monthEvents.reduce((s,e)=> s+(Number(e.gratuity)||0), 0);
+  const needingStaff = monthEvents.filter(e=>!isFullyStaffed(e)).length;
+  const strip = document.getElementById("summaryStrip");
+  strip.innerHTML =
+    '<div class="pill"><span class="label">Events</span><span class="val">'+monthEvents.length+'</span></div>'
+  + '<div class="pill"><span class="label">Needs Staff</span><span class="val">'+needingStaff+'</span></div>'
+  + '<div class="pill"><span class="label">Gratuity</span><span class="val num">$'+totalGratuity.toFixed(0)+'</span></div>';
+}
+
+function escapeHtml(s){
+  const d = document.createElement("div");
+  d.textContent = s || "";
+  return d.innerHTML;
+}
+
+// ---------------- Day sheet ----------------
+function openDaySheet(dateStr){
+  activeDayStr = dateStr;
+  const d = new Date(dateStr+"T00:00:00");
+  document.getElementById("daySheetTitle").textContent = d.toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric'});
+  const list = document.getElementById("dayEventsList");
+  const dayEvents = eventsOn(dateStr);
+  if(dayEvents.length===0){
+    list.innerHTML = '<div class="empty-note">No catering events this day yet.</div>';
+  }else{
+    list.innerHTML = dayEvents.map(e=>{
+      const full = isFullyStaffed(e);
+      return '<div class="event-card" data-id="'+e.id+'">'
+        + '<div class="ev-name">'+escapeHtml(e.client)+'</div>'
+        + '<div class="ev-meta">'+escapeHtml(e.time||"No time set")+' · Party of '+(e.party||"?")+'</div>'
+        + '<span class="staff-progress'+(full?' full':'')+'">'+e.staff.length+' of '+(e.staffNeeded||0)+' staffed</span>'
+        + '</div>';
+    }).join("");
+    list.querySelectorAll(".event-card").forEach(card=>{
+      card.addEventListener("click", ()=> openEventEditor(card.dataset.id));
+    });
+  }
+  document.getElementById("dayOverlay").classList.add("open");
+}
+function closeDaySheet(){ document.getElementById("dayOverlay").classList.remove("open"); }
+
+// ---------------- Event editor ----------------
+function openEventEditor(eventId){
+  editingEventId = eventId || null;
+  const ev = eventId ? events.find(e=>e.id===eventId) : null;
+
+  document.getElementById("eventSheetTitle").textContent = ev ? "Edit Event" : "New Event";
+  document.getElementById("evClient").value = ev ? ev.client : "";
+  document.getElementById("evDate").value = ev ? ev.date : (activeDayStr || todayStr);
+  document.getElementById("evTime").value = ev ? ev.time : "";
+  document.getElementById("evParty").value = ev ? ev.party : "";
+  document.getElementById("evStaffNeeded").value = ev ? ev.staffNeeded : "";
+  document.getElementById("evGratuity").value = ev ? ev.gratuity : "";
+  document.getElementById("evNotes").value = ev ? ev.notes : "";
+  selectedStaff = ev ? [...ev.staff] : [];
+  splitMode = ev ? (ev.splitMode || "even") : "even";
+  document.getElementById("deleteEventBtn").style.display = ev ? "block" : "none";
+
+  renderStaffChipPool();
+  setSplitMode(splitMode, ev ? ev.customSplits : {});
+  closeDaySheet();
+  document.getElementById("eventOverlay").classList.add("open");
+}
+function closeEventEditor(){ document.getElementById("eventOverlay").classList.remove("open"); }
+
+function renderStaffChipPool(){
+  const pool = document.getElementById("staffChipPool");
+  const eligible = ROSTER.filter(n => staffPool[n] && staffPool[n].eligible);
+  const sorted = [...eligible].sort((a,b)=>{
+    const aStar = staffPool[a].starred ? 0 : 1;
+    const bStar = staffPool[b].starred ? 0 : 1;
+    if(aStar !== bStar) return aStar - bStar;
+    return a.localeCompare(b);
+  });
+  if(sorted.length===0){
+    pool.innerHTML = '<div class="empty-note" style="padding:8px 0;">Nobody is in your Catering-Eligible pool yet. Tap "Staff" up top to add people.</div>';
+    return;
+  }
+  const eventDate = document.getElementById("evDate").value || activeDayStr || todayStr;
+  pool.innerHTML = sorted.map(n=>{
+    const isSel = selectedStaff.includes(n);
+    const isStar = staffPool[n].starred;
+    const conflict = getScheduleConflict(n, eventDate);
+    let cls = "chip" + (isSel?" selected":"") + (isStar?" starred":"") + (conflict?" conflict":"");
+    let html = '<div class="'+cls+'" data-name="'+escapeHtml(n)+'">'+n.split(" ")[0];
+    if(conflict) html += '<span class="chip-warning">⚠ working '+escapeHtml(conflict)+'</span>';
+    html += '</div>';
+    return html;
+  }).join("");
+  pool.querySelectorAll(".chip").forEach(chip=>{
+    chip.addEventListener("click", ()=>{
+      const name = chip.dataset.name;
+      if(selectedStaff.includes(name)) selectedStaff = selectedStaff.filter(n=>n!==name);
+      else selectedStaff.push(name);
+      renderStaffChipPool();
+      updateAssignCount();
+      renderSplitPreview();
+    });
+  });
+  updateAssignCount();
+}
+function updateAssignCount(){
+  const needed = Number(document.getElementById("evStaffNeeded").value)||0;
+  document.getElementById("assignCount").innerHTML = '<b>'+selectedStaff.length+'</b> of <b>'+needed+'</b> assigned';
+}
+
+function setSplitMode(mode, customSplits){
+  splitMode = mode;
+  document.getElementById("splitEvenBtn").classList.toggle("active", mode==="even");
+  document.getElementById("splitCustomBtn").classList.toggle("active", mode==="custom");
+  const area = document.getElementById("customSplitArea");
+  if(mode==="custom"){
+    area.style.display = "block";
+    area.innerHTML = selectedStaff.map(n=>{
+      const val = (customSplits && customSplits[n]!=null) ? customSplits[n] : "";
+      return '<div class="custom-split-row"><span>'+n.split(" ")[0]+'</span><input type="number" step="0.01" min="0" data-name="'+escapeHtml(n)+'" value="'+val+'" placeholder="0.00"></div>';
+    }).join("") || '<div class="empty-note" style="padding:6px 0;">Assign staff first to set custom amounts.</div>';
+    area.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", renderSplitPreview));
+  }else{
+    area.style.display = "none";
+  }
+  renderSplitPreview();
+}
+function renderSplitPreview(){
+  const total = Number(document.getElementById("evGratuity").value) || 0;
+  const preview = document.getElementById("splitPreview");
+  if(selectedStaff.length===0){ preview.textContent = "Assign staff to see the split."; return; }
+  if(splitMode==="even"){
+    const each = total / selectedStaff.length;
+    preview.textContent = "$" + each.toFixed(2) + " each (" + selectedStaff.length + " people)";
+  }else{
+    const area = document.getElementById("customSplitArea");
+    let sum = 0;
+    area.querySelectorAll("input").forEach(inp=> sum += Number(inp.value)||0);
+    const diff = total - sum;
+    preview.textContent = "Assigned: $"+sum.toFixed(2)+" of $"+total.toFixed(2)+(Math.abs(diff)>0.01 ? "  ($"+diff.toFixed(2)+" unassigned)" : "  ✓ fully assigned");
+  }
+}
+
+async function saveEvent(){
+  const client = document.getElementById("evClient").value.trim();
+  if(!client){ alert("Give this event a name first."); return; }
+  const date = document.getElementById("evDate").value;
+  if(!date){ alert("Pick a date first."); return; }
+
+  let customSplits = {};
+  if(splitMode==="custom"){
+    document.getElementById("customSplitArea").querySelectorAll("input").forEach(inp=>{
+      customSplits[inp.dataset.name] = Number(inp.value)||0;
+    });
+  }
+
+  const payload = {
+    id: editingEventId || uid(),
+    date, client,
+    time: document.getElementById("evTime").value.trim(),
+    party: Number(document.getElementById("evParty").value)||0,
+    staffNeeded: Number(document.getElementById("evStaffNeeded").value)||0,
+    staff: [...selectedStaff],
+    gratuity: Number(document.getElementById("evGratuity").value)||0,
+    splitMode, customSplits,
+    notes: document.getElementById("evNotes").value.trim()
+  };
+
+  if(editingEventId){
+    const idx = events.findIndex(e=>e.id===editingEventId);
+    events[idx] = payload;
+  }else{
+    events.push(payload);
+  }
+  await saveEvents();
+  closeEventEditor();
+  render();
+}
+
+async function deleteEvent(){
+  if(!editingEventId) return;
+  if(!confirm("Delete this event?")) return;
+  events = events.filter(e=>e.id!==editingEventId);
+  await saveEvents();
+  closeEventEditor();
+  render();
+}
+
+// ---------------- Staff settings ----------------
+function openStaffSettings(){
+  const list = document.getElementById("staffSettingsList");
+  list.innerHTML = ROSTER.map(n=>{
+    const p = staffPool[n];
+    return '<div class="settings-row"><span class="name">'+n+'</span>'
+      + '<div class="toggle-group">'
+      + '<label class="switch"><input type="checkbox" data-name="'+escapeHtml(n)+'" data-field="starred" '+(p.starred?"checked":"")+'><span class="switch-track"></span></label>★'
+      + '<label class="switch"><input type="checkbox" data-name="'+escapeHtml(n)+'" data-field="eligible" '+(p.eligible?"checked":"")+'><span class="switch-track"></span></label>Eligible'
+      + '</div></div>';
+  }).join("");
+  list.querySelectorAll("input[type=checkbox]").forEach(inp=>{
+    inp.addEventListener("change", async ()=>{
+      const name = inp.dataset.name, field = inp.dataset.field;
+      staffPool[name][field] = inp.checked;
+      await saveStaffPool();
+    });
+  });
+  document.getElementById("staffOverlay").classList.add("open");
+}
+function closeStaffSettings(){ document.getElementById("staffOverlay").classList.remove("open"); }
+
+// ---------------- Wire up ----------------
+document.getElementById("prevBtn").addEventListener("click", ()=>{
+  viewMonth--; if(viewMonth<0){ viewMonth=11; viewYear--; } render();
+});
+document.getElementById("nextBtn").addEventListener("click", ()=>{
+  viewMonth++; if(viewMonth>11){ viewMonth=0; viewYear++; } render();
+});
+document.getElementById("monthTitle").addEventListener("click", ()=>{
+  viewYear = todayDate.getFullYear(); viewMonth = todayDate.getMonth(); render();
+});
+document.getElementById("fabAdd").addEventListener("click", ()=> openDaySheet(todayStr));
+document.getElementById("dayClose").addEventListener("click", closeDaySheet);
+document.getElementById("dayOverlay").addEventListener("click", (e)=>{ if(e.target.id==="dayOverlay") closeDaySheet(); });
+document.getElementById("addEventForDay").addEventListener("click", ()=> openEventEditor(null));
+document.getElementById("eventClose").addEventListener("click", closeEventEditor);
+document.getElementById("eventOverlay").addEventListener("click", (e)=>{ if(e.target.id==="eventOverlay") closeEventEditor(); });
+document.getElementById("evStaffNeeded").addEventListener("input", updateAssignCount);
+document.getElementById("evDate").addEventListener("change", renderStaffChipPool);
+document.getElementById("evGratuity").addEventListener("input", renderSplitPreview);
+document.getElementById("splitEvenBtn").addEventListener("click", ()=> setSplitMode("even"));
+document.getElementById("splitCustomBtn").addEventListener("click", ()=> setSplitMode("custom"));
+document.getElementById("saveEventBtn").addEventListener("click", saveEvent);
+document.getElementById("deleteEventBtn").addEventListener("click", deleteEvent);
+document.getElementById("staffPoolBtn").addEventListener("click", openStaffSettings);
+document.getElementById("staffClose").addEventListener("click", closeStaffSettings);
+document.getElementById("staffOverlay").addEventListener("click", (e)=>{ if(e.target.id==="staffOverlay") closeStaffSettings(); });
+
+async function init(){
+  viewYear = todayDate.getFullYear();
+  viewMonth = todayDate.getMonth();
+  await loadData();
+  render();
+}
+init();
+
+})();
+</script>
+</body>
+</html>
