@@ -4672,6 +4672,10 @@ function openSheet(name, period){
       const isRealShiftNow = (period === "am" ? isRealAM(o) : isRealPM(o));
       if(previousValue === "No" && isLocked && isRealShiftNow){
         addTempOverride(name, period, DAYS[currentDay].iso);
+        isLocked = false;
+        updateLockButton();
+        saveLockState();
+        showLockedToast('Shift assigned — Temp Override is locked again.');
       }
 
       closeSheet();
