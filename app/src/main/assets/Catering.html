@@ -622,6 +622,13 @@ async function saveEvent(){
     events.push(payload);
   }
   await saveEvents();
+
+  if(window.AndroidBridge && window.AndroidBridge.scheduleReminders){
+    try{
+      window.AndroidBridge.scheduleReminders(payload.id, payload.client, payload.date, payload.time || "");
+    }catch(e){ /* not running in the app shell, ignore */ }
+  }
+
   closeEventEditor();
   render();
 }
@@ -629,6 +636,9 @@ async function saveEvent(){
 async function deleteEvent(){
   if(!editingEventId) return;
   if(!confirm("Delete this event?")) return;
+  if(window.AndroidBridge && window.AndroidBridge.cancelReminders){
+    try{ window.AndroidBridge.cancelReminders(editingEventId); }catch(e){}
+  }
   events = events.filter(e=>e.id!==editingEventId);
   await saveEvents();
   closeEventEditor();

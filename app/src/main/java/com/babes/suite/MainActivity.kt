@@ -18,11 +18,28 @@ import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.pm.PackageManager
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
+
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op either way */ }
 
     // Handles <input type="file"> for JSON restore / import buttons
     private val fileChooser =
@@ -47,6 +64,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.addJavascriptInterface(ExportBridge(), "AndroidBridge")
+
+        createNotificationChannel()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -87,6 +112,55 @@ class MainActivity : AppCompatActivity() {
         webView.saveState(outState)
     }
 
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CATERING_CHANNEL_ID, "Catering Reminders", NotificationManager.IMPORTANCE_HIGH
+            )
+            channel.description = "Reminders for upcoming catering events"
+            val nm = getSystemService(NotificationManager::class.java)
+            nm.createNotificationChannel(channel)
+        }
+    }
+
+    private fun parseEventTime(raw: String): Pair<Int, Int>? {
+        val cleaned = raw.trim().uppercase(Locale.US)
+        if (cleaned.isEmpty()) return null
+        val patterns = listOf("h:mm a", "hh:mm a", "h a", "ha", "H:mm")
+        for (p in patterns) {
+            try {
+                val sdf = SimpleDateFormat(p, Locale.US)
+                sdf.isLenient = false
+                val d = sdf.parse(cleaned) ?: continue
+                val c = Calendar.getInstance()
+                c.time = d
+                return Pair(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE))
+            } catch (e: Exception) {
+                continue
+            }
+        }
+        return null
+    }
+
+    private fun scheduleOne(uniqueName: String, title: String, message: String, trigger: Calendar, notifId: Int) {
+        val wm = WorkManager.getInstance(applicationContext)
+        val delay = trigger.timeInMillis - System.currentTimeMillis()
+        if (delay <= 0) {
+            wm.cancelUniqueWork(uniqueName)
+            return
+        }
+        val data = Data.Builder()
+            .putString("title", title)
+            .putString("message", message)
+            .putInt("notifId", notifId)
+            .build()
+        val request = OneTimeWorkRequestBuilder<ReminderWorker>()
+            .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+            .setInputData(data)
+            .build()
+        wm.enqueueUniqueWork(uniqueName, ExistingWorkPolicy.REPLACE, request)
+    }
+
     inner class ExportBridge {
         @JavascriptInterface
         fun saveFile(fileName: String, mimeType: String, base64Data: String) {
@@ -122,9 +196,67 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        @JavascriptInterface
+        fun scheduleReminders(eventId: String, title: String, dateIso: String, timeText: String) {
+            try {
+                val parts = dateIso.split("-").map { it.toInt() }
+                val base = Calendar.getInstance()
+                base.set(parts[0], parts[1] - 1, parts[2], 0, 0, 0)
+                base.set(Calendar.MILLISECOND, 0)
+
+                val parsedTime = parseEventTime(timeText)
+                val wm = WorkManager.getInstance(applicationContext)
+
+                if (parsedTime != null) {
+                    val startCal = base.clone() as Calendar
+                    startCal.set(Calendar.HOUR_OF_DAY, parsedTime.first)
+                    startCal.set(Calendar.MINUTE, parsedTime.second)
+
+                    val twoHrCal = startCal.clone() as Calendar
+                    twoHrCal.add(Calendar.HOUR_OF_DAY, -2)
+
+                    val morningCal = base.clone() as Calendar
+                    morningCal.set(Calendar.HOUR_OF_DAY, 11)
+                    morningCal.set(Calendar.MINUTE, 0)
+
+                    val startsAfter11 = parsedTime.first > 11 || (parsedTime.first == 11 && parsedTime.second > 0)
+
+                    if (startsAfter11) {
+                        scheduleOne("$eventId-morning", title, "Coming up today", morningCal, ("$eventId-morning").hashCode())
+                        scheduleOne("$eventId-2hr", title, "Starts in 2 hours", twoHrCal, ("$eventId-2hr").hashCode())
+                    } else {
+                        scheduleOne("$eventId-morning", title, "Starts in 2 hours", twoHrCal, ("$eventId-morning").hashCode())
+                        wm.cancelUniqueWork("$eventId-2hr")
+                    }
+                } else {
+                    val morningCal = base.clone() as Calendar
+                    morningCal.set(Calendar.HOUR_OF_DAY, 11)
+                    morningCal.set(Calendar.MINUTE, 0)
+                    scheduleOne("$eventId-morning", title, "Coming up today", morningCal, ("$eventId-morning").hashCode())
+                    wm.cancelUniqueWork("$eventId-2hr")
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, "Couldn't read the event time - only the 11 AM reminder was scheduled.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Couldn't schedule reminder: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun cancelReminders(eventId: String) {
+            val wm = WorkManager.getInstance(applicationContext)
+            wm.cancelUniqueWork("$eventId-morning")
+            wm.cancelUniqueWork("$eventId-2hr")
+        }
     }
 
     companion object {
+        const val CATERING_CHANNEL_ID = "catering_reminders"
+
         // Captures clicks on download links, converts the blob to base64,
         // and hands it to the native side to write into Downloads.
         private const val DOWNLOAD_HOOK_JS = """
